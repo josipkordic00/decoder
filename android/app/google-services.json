@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "18573800650",
+    "project_id": "decoder-d3183",
+    "storage_bucket": "decoder-d3183.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:18573800650:android:bd317744cd088c90753033",
+        "android_client_info": {
+          "package_name": "com.example.decoder"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCjFOM-Mm7L_PDyTSa7d-X4EpVO5_tkQiM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
