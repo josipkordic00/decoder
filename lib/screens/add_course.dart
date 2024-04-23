@@ -70,20 +70,15 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
       final imageURL = await storageRef.getDownloadURL();
       var firestoreInstance = FirebaseFirestore.instance;
       var userId = _user.uid;
-      var courseId = firestoreInstance
-          .collection('courses')
-          .doc()
-          .id;
+      var courseId = firestoreInstance.collection('courses').doc().id;
 
-      await firestoreInstance
-          .collection('courses')
-          .doc(courseId)
-          .set({
+      await firestoreInstance.collection('courses').doc(courseId).set({
         'name': _enteredName,
         'image_url': imageURL,
         'lessons': firestoreLessons,
         'tests': firestoreTests,
         'user_id': userId,
+        'createdAt': Timestamp.now(),
       });
       setState(() {
         _isUpdating = false;
@@ -151,11 +146,10 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
                       setState(() {
                         sectionsList
                             .add(TestSection(title: titleTestController.text));
-                        showError =
-                            false; // Reset error state on successful input
+                        showError = false;
                       });
-                      Navigator.of(context)
-                          .pop(); // Dismiss the dialog after saving
+                      titleTestController.clear();
+                      Navigator.of(context).pop();
                     }
                   },
                   child: const Text('Save'),
@@ -218,6 +212,7 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
                         showError =
                             false; // Reset error state on successful input
                       });
+                      titleController.clear();
                       Navigator.of(context)
                           .pop(); // Dismiss the dialog after saving
                     }
@@ -301,6 +296,8 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
                         _enteredName = newValue!;
                       },
                       autocorrect: false,
+                      style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                      color: Theme.of(context).colorScheme.onBackground),
                       keyboardType: TextInputType.text,
                       decoration: InputDecoration(
                         border: OutlineInputBorder(
@@ -308,7 +305,6 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
                         ),
                         contentPadding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 8),
-                        hintText: 'Course name',
                         prefixIcon: Icon(
                           Icons.play_circle,
                           color: Theme.of(context).colorScheme.onBackground,

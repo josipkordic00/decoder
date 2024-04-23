@@ -45,6 +45,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     _form.currentState!.save();
+    FocusScope.of(context).unfocus();
 
     try {
       //spinner active

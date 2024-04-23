@@ -27,12 +27,14 @@ class _AuthScreenState extends State<AuthScreen> {
     }
 
     _form.currentState!.save();
+    FocusScope.of(context).unfocus();
     try {
       setState(() {
         _isAuth = true;
       });
       await _firebase.signInWithEmailAndPassword(
           email: _enteredEmail, password: _enteredPassword);
+
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

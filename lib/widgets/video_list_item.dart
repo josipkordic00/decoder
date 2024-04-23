@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:decoder/models/course.dart';
 import 'package:decoder/models/lesson.dart';
 import 'package:flutter/cupertino.dart';
@@ -20,17 +21,7 @@ class VideoListItem extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final data = ref.watch(allUsersProvider);
-    var _firstName = '';
-    var _lastName = '';
-    var profileImage;
-
-    for (var entry in data) {
-      if (entry['id'] == course.userId) {
-        _firstName = entry['first_name'];
-        _lastName = entry['last_name'];
-        profileImage = entry['image'];
-      }
-    }
+    File? imageFile;
 
     void switchOnSingleLesson(BuildContext context, Course course) {
       Navigator.of(context).push(
@@ -39,6 +30,28 @@ class VideoListItem extends ConsumerWidget {
                   course: course,
                 )),
       );
+    }
+
+    Future<File> urlToFile(String imageUrl) async {
+      final uri = Uri.parse(imageUrl);
+      final response = await http.get(uri);
+
+      final directory = await getApplicationDocumentsDirectory();
+      final imagesDirectoryPath = '${directory.path}/user_profile_images';
+      final imagesDirectory = Directory(imagesDirectoryPath);
+
+      if (!await imagesDirectory.exists()) {
+        await imagesDirectory.create(recursive: true);
+      }
+
+      final filePath =
+          '${imagesDirectory.path}/${Uri.encodeComponent(uri.pathSegments.last)}';
+      final file = File(filePath);
+      //print("Saving file to: $filePath");
+
+      await file.writeAsBytes(response.bodyBytes);
+
+      return file;
     }
 
     return Card(
@@ -52,88 +65,126 @@ class VideoListItem extends ConsumerWidget {
         borderRadius: BorderRadius.circular(15),
         child: Padding(
           padding: const EdgeInsets.all(8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  CircleAvatar(
-            radius: 25,
-            backgroundImage:
-                profileImage != null ? FileImage(profileImage) : null,
-            backgroundColor: Colors
-                .transparent, // Show transparent background if image is null
-          ),
-                  const SizedBox(
-                    width: 10,
-                  ),
-                  Expanded(
-                    child: Text(
-                      '$_firstName $_lastName',
-                      style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                          color: Theme.of(context).colorScheme.onBackground),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(
-                height: 10,
-              ),
-              Hero(
-                tag: course.id,
-                child: FadeInImage(
-                  placeholder: MemoryImage(kTransparentImage),
-                  image: NetworkImage(course.image!),
-                  fit: BoxFit.fitHeight,
-                  height: 200,
-                  width: double.infinity,
-                ),
-              ),
-              const SizedBox(
-                height: 10,
-              ),
-              Text(
-                course.title,
-                style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                    color: Theme.of(context).colorScheme.onBackground,
-                    fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(
-                height: 5,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Lessons: ${course.lessons.length}',
-                    style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                        color: Theme.of(context).colorScheme.onBackground),
-                  ),
-                  Text(
-                    'Tests: ${course.tests.length}',
-                    style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                        color: Theme.of(context).colorScheme.onBackground),
-                  ),
-                  const SizedBox(
-                    width: 40,
-                  ),
-                  Row(
-                    children: [
-                      Text(
-                        '1234',
-                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                            color: Theme.of(context).colorScheme.onBackground),
-                      ),
-                      const SizedBox(
-                        width: 2,
-                      ),
-                      const Icon(Icons.people_alt),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
+          child: StreamBuilder(
+              stream:
+                  FirebaseFirestore.instance.collection('users').snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasData && !snapshot.hasError) {
+                  for (var doc in snapshot.data!.docs) {
+                    if (doc.id == course.userId) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              CircleAvatar(
+                                radius:
+                                    20, // The radius is half of both the width and height of the Container
+                                backgroundImage:
+                                    NetworkImage(doc.data()['image_url']),
+                                backgroundColor: Colors
+                                    .transparent, // Optional: set to transparent if needed
+                              ),
+                              const SizedBox(
+                                width: 10,
+                              ),
+                              Expanded(
+                                child: Text(
+                                  '${doc.data()['first_name']} ${doc.data()['last_name']}',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium!
+                                      .copyWith(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onBackground),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          Hero(
+                            tag: course.id,
+                            child: FadeInImage(
+                              placeholder: MemoryImage(kTransparentImage),
+                              image: NetworkImage(course.image!),
+                              fit: BoxFit.fitHeight,
+                              height: 200,
+                              width: double.infinity,
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          Text(
+                            course.title,
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge!
+                                .copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onBackground,
+                                    fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(
+                            height: 5,
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Lessons: ${course.lessons.length}',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyLarge!
+                                    .copyWith(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onBackground),
+                              ),
+                              Text(
+                                'Tests: ${course.tests.length}',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyLarge!
+                                    .copyWith(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onBackground),
+                              ),
+                              const SizedBox(
+                                width: 40,
+                              ),
+                              Row(
+                                children: [
+                                  Text(
+                                    '1234',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyLarge!
+                                        .copyWith(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onBackground),
+                                  ),
+                                  const SizedBox(
+                                    width: 2,
+                                  ),
+                                  const Icon(Icons.people_alt),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      );
+                    }
+                  }
+                }
+                return const Text('Error');
+              }),
         ),
       ),
     );

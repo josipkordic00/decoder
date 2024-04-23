@@ -1,4 +1,5 @@
-import 'package:decoder/providers/course_content.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:decoder/models/course.dart';
 import 'package:decoder/screens/add_course.dart';
 import 'package:decoder/screens/owned_courses.dart';
 import 'package:decoder/screens/profile_statistics.dart';
@@ -29,7 +30,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
     final userId = FirebaseAuth.instance.currentUser!.uid;
     ref.read(userDataProvider.notifier).getFromFirestore(userId);
-    ref.read(courseContentProvider.notifier).getAllCoursesFromFirestore();
     ref.read(allUsersProvider.notifier).getAllUsersFromFirestore();
     super.initState();
   }
@@ -47,16 +47,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final prUser = ref.watch(userDataProvider);
-    final courses = ref.watch(courseContentProvider);
     //default content on page
     Widget content = Padding(
       padding: const EdgeInsets.only(left: 20, right: 20, top: 5),
-      child: ListView.builder(
-        itemCount: courses.length,
-        itemBuilder: (context, index) {
-          return VideoListItem(course: courses[index]);
-        },
-      ),
+      child: StreamBuilder(
+          stream: FirebaseFirestore.instance.collection('courses').orderBy('createdAt', descending: true).snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+            final loadedCourses = snapshot.data!.docs;
+            return ListView.builder(
+              itemCount: loadedCourses.length,
+              itemBuilder: (context, index) {
+                var course = Course(
+                    title: loadedCourses[index].data()['name'],
+                    lessons: loadedCourses[index].data()['lessons'],
+                    id: loadedCourses[index].id,
+                    image: loadedCourses[index].data()['image_url'],
+                    userId: loadedCourses[index].data()['user_id'],
+                    tests: loadedCourses[index].data()['tests']);
+                return VideoListItem(course: course);
+              },
+            );
+          }),
     );
 
     //changing content based on tapped bottom bar
@@ -165,16 +181,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 Theme.of(context).appBarTheme.foregroundColor,
                             size: 30,
                           ),
-                          onPressed: () {
-                            ref
-                                .read(courseContentProvider.notifier)
-                                .getAllCoursesFromFirestore();
-                            // Navigator.of(context).push(
-                            //   MaterialPageRoute(
-                            //     builder: (ctx) => const OwnedCoursesScreen(),
-                            //   ),
-                            // );
-                          },
+                          onPressed: (){},
                         ),
                       ],
                     ),

@@ -17,7 +17,6 @@ class AllUsersNotifier extends StateNotifier<List<Map<String, dynamic>>> {
       final imageEntry = <String, dynamic>{'image': imageFile};
       map.addEntries(idEntry.entries);
       map.addEntries(imageEntry.entries);
-      print(map);
       state = [...state, map];
     }
   }
