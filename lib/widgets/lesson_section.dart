@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
 class LessonSection extends StatelessWidget {
-  const LessonSection({super.key, required this.title});
+  const LessonSection({super.key, required this.title, required this.videoID});
 
   final String title;
+  final String videoID;
   @override
   Widget build(BuildContext context) {
     return InkWell(

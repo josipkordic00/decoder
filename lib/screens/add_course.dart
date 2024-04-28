@@ -1,11 +1,13 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:decoder/models/lesson.dart';
 import 'package:decoder/widgets/lesson_section.dart';
 import 'package:decoder/widgets/test_section.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 
 class AddCourseScreen extends ConsumerStatefulWidget {
@@ -18,6 +20,7 @@ class AddCourseScreen extends ConsumerStatefulWidget {
 class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
   final TextEditingController titleController = TextEditingController();
   final TextEditingController titleTestController = TextEditingController();
+  final TextEditingController linkLessonController = TextEditingController();
   bool showError = false;
   bool _isUpdating = false;
   List<dynamic> sectionsList = [];
@@ -50,11 +53,15 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
     });
     var addedLessons = sectionsList.whereType<LessonSection>().toList();
     var addedTests = sectionsList.whereType<TestSection>().toList();
-    List<String> firestoreLessons = [];
+    List<dynamic> firestoreLessons = [];
     List<String> firestoreTests = [];
 
     for (var i in addedLessons) {
-      firestoreLessons.add(i.title);
+      String title = i.title;
+      String? videoUrl = YoutubePlayer.convertUrlToId(i.videoID);
+      Lesson lesson = Lesson(
+          title: title, url: videoUrl!, learned: false);
+      firestoreLessons.add(lesson.toMap());
     }
     for (var i in addedTests) {
       firestoreTests.add(i.title);
@@ -75,11 +82,16 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
       await firestoreInstance.collection('courses').doc(courseId).set({
         'name': _enteredName,
         'image_url': imageURL,
-        'lessons': firestoreLessons,
-        'tests': firestoreTests,
         'user_id': userId,
+        'tests': firestoreTests,
         'createdAt': Timestamp.now(),
-      });
+      }, SetOptions(merge: true));
+      for (var lesson in firestoreLessons) {
+    await firestoreInstance.collection('courses')
+                           .doc(courseId)
+                           .collection('lessons')
+                           .add(lesson);
+}
       setState(() {
         _isUpdating = false;
       });
@@ -197,22 +209,50 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
                         borderRadius: BorderRadius.circular(20)),
                   ),
                 ),
+                TextFormField(
+                  controller: linkLessonController,
+                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                      color: Theme.of(context).colorScheme.onBackground),
+                  decoration: InputDecoration(
+                    errorText: showError ? 'Please paste youtube link' : null,
+                    hintText: 'Enter lesson youtube link',
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20)),
+                  ),
+                ),
                 const SizedBox(height: 20),
                 TextButton(
                   onPressed: () {
-                    if (titleController.text.isEmpty) {
+                    if (titleController.text.isEmpty ||
+                        linkLessonController.text.isEmpty) {
                       // If text is empty, update the state to show error
                       setState(() {
                         showError = true; // Enable error message display
                       });
                     } else {
                       setState(() {
-                        sectionsList
-                            .add(LessonSection(title: titleController.text));
+                        sectionsList.add(
+                          LessonSection(
+                            title: titleController.text,
+                            videoID: linkLessonController.text,
+                          ),
+                        );
+                        var id = YoutubePlayer.convertUrlToId(
+                            linkLessonController.text);
+                        YoutubePlayerController _controller =
+                            YoutubePlayerController(
+                          initialVideoId: id!,
+                          flags: const YoutubePlayerFlags(
+                            autoPlay: true,
+                            mute: false,
+                          ),
+                        
+                        );
                         showError =
                             false; // Reset error state on successful input
                       });
                       titleController.clear();
+                      linkLessonController.clear();
                       Navigator.of(context)
                           .pop(); // Dismiss the dialog after saving
                     }
@@ -297,7 +337,7 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
                       },
                       autocorrect: false,
                       style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                      color: Theme.of(context).colorScheme.onBackground),
+                          color: Theme.of(context).colorScheme.onBackground),
                       keyboardType: TextInputType.text,
                       decoration: InputDecoration(
                         border: OutlineInputBorder(

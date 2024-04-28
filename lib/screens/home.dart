@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:decoder/models/course.dart';
+import 'package:decoder/models/lesson.dart';
 import 'package:decoder/screens/add_course.dart';
 import 'package:decoder/screens/owned_courses.dart';
 import 'package:decoder/screens/profile_statistics.dart';
@@ -51,7 +52,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     Widget content = Padding(
       padding: const EdgeInsets.only(left: 20, right: 20, top: 5),
       child: StreamBuilder(
-          stream: FirebaseFirestore.instance.collection('courses').orderBy('createdAt', descending: true).snapshots(),
+          stream: FirebaseFirestore.instance
+              .collection('courses')
+              .orderBy('createdAt', descending: true)
+              .snapshots(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(
@@ -59,12 +63,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               );
             }
             final loadedCourses = snapshot.data!.docs;
+
             return ListView.builder(
               itemCount: loadedCourses.length,
               itemBuilder: (context, index) {
+                List<dynamic> lessonWidget = [];
+                var lessonDocRef = FirebaseFirestore.instance
+                    .collection('courses')
+                    .doc(loadedCourses[index].id)
+                    .collection('lessons');
+                lessonDocRef.get().then((querySnapshot) {
+                    for (var lesson in querySnapshot.docs) {
+                  lessonWidget.add(Lesson(
+                      id: lesson.id,
+                      title: lesson.data()['title'],
+                      url: lesson.data()['url'],
+                      learned: lesson.data()['learned']));
+                  }
+                }).catchError((error) {
+                  print("Error getting lessons: $error");
+                });
+                
                 var course = Course(
                     title: loadedCourses[index].data()['name'],
-                    lessons: loadedCourses[index].data()['lessons'],
+                    lessons: lessonWidget,
                     id: loadedCourses[index].id,
                     image: loadedCourses[index].data()['image_url'],
                     userId: loadedCourses[index].data()['user_id'],
@@ -181,7 +203,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 Theme.of(context).appBarTheme.foregroundColor,
                             size: 30,
                           ),
-                          onPressed: (){},
+                          onPressed: () {},
                         ),
                       ],
                     ),
