@@ -1,6 +1,4 @@
-import 'package:decoder/models/lesson.dart';
-import 'package:decoder/models/test.dart';
-import 'package:decoder/models/user.dart';
+
 
 class Course {
   const Course(
@@ -9,10 +7,13 @@ class Course {
       this.image,
       required this.id,
       required this.userId,
-      required this.tests});
+      required this.tests,
+      required this.enrolledUsers
+      });
   final String title;
   final List<dynamic> lessons;
   final List<dynamic> tests;
+  final List<dynamic> enrolledUsers;
   final String? image;
   final String id;
   final String userId;

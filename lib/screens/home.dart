@@ -71,7 +71,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 var lessonDocRef = FirebaseFirestore.instance
                     .collection('courses')
                     .doc(loadedCourses[index].id)
-                    .collection('lessons');
+                    .collection('lessons').orderBy('createdAt', descending: false);
                 lessonDocRef.get().then((querySnapshot) {
                     for (var lesson in querySnapshot.docs) {
                   lessonWidget.add(Lesson(
@@ -88,6 +88,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     title: loadedCourses[index].data()['name'],
                     lessons: lessonWidget,
                     id: loadedCourses[index].id,
+                    enrolledUsers: loadedCourses[index].data()['enrolled_users'],
                     image: loadedCourses[index].data()['image_url'],
                     userId: loadedCourses[index].data()['user_id'],
                     tests: loadedCourses[index].data()['tests']);

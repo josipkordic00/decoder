@@ -67,6 +67,7 @@ class VideoListItem extends ConsumerWidget {
           padding: const EdgeInsets.all(8.0),
           child: StreamBuilder(
               stream:
+              //perf improve(courses instead of users)
                   FirebaseFirestore.instance.collection('users').snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.hasData && !snapshot.hasError) {
@@ -79,11 +80,11 @@ class VideoListItem extends ConsumerWidget {
                             children: [
                               CircleAvatar(
                                 radius:
-                                    20, // The radius is half of both the width and height of the Container
+                                    20,
                                 backgroundImage:
                                     NetworkImage(doc.data()['image_url']),
                                 backgroundColor: Colors
-                                    .transparent, // Optional: set to transparent if needed
+                                    .transparent,
                               ),
                               const SizedBox(
                                 width: 10,
@@ -161,7 +162,7 @@ class VideoListItem extends ConsumerWidget {
                               Row(
                                 children: [
                                   Text(
-                                    '1234',
+                                    '${course.enrolledUsers.length}',
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodyLarge!

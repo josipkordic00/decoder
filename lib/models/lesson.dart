@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
 
 const uuid = Uuid();
@@ -13,7 +14,7 @@ class Lesson {
   final String title;
   final String url;
   final String id;
-  final bool learned;
+  final List<dynamic> learned;
 
   Map<String, dynamic> toMap() {
     return {
@@ -21,6 +22,7 @@ class Lesson {
       'title': title,
       'url': url,
       'learned': learned,
+      'createdAt': Timestamp.now()
     };
   }
 }

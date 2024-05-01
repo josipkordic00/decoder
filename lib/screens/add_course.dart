@@ -59,8 +59,7 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
     for (var i in addedLessons) {
       String title = i.title;
       String? videoUrl = YoutubePlayer.convertUrlToId(i.videoID);
-      Lesson lesson = Lesson(
-          title: title, url: videoUrl!, learned: false);
+      Lesson lesson = Lesson(title: title, url: videoUrl!, learned: []);
       firestoreLessons.add(lesson.toMap());
     }
     for (var i in addedTests) {
@@ -85,13 +84,15 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
         'user_id': userId,
         'tests': firestoreTests,
         'createdAt': Timestamp.now(),
+        'enrolled_users': []
       }, SetOptions(merge: true));
       for (var lesson in firestoreLessons) {
-    await firestoreInstance.collection('courses')
-                           .doc(courseId)
-                           .collection('lessons')
-                           .add(lesson);
-}
+        await firestoreInstance
+            .collection('courses')
+            .doc(courseId)
+            .collection('lessons')
+            .add(lesson);
+      }
       setState(() {
         _isUpdating = false;
       });
@@ -209,6 +210,9 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
                         borderRadius: BorderRadius.circular(20)),
                   ),
                 ),
+                const SizedBox(
+                  height: 5,
+                ),
                 TextFormField(
                   controller: linkLessonController,
                   style: Theme.of(context).textTheme.bodyLarge!.copyWith(
@@ -239,14 +243,13 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
                         );
                         var id = YoutubePlayer.convertUrlToId(
                             linkLessonController.text);
-                        YoutubePlayerController _controller =
+                        YoutubePlayerController controller =
                             YoutubePlayerController(
                           initialVideoId: id!,
                           flags: const YoutubePlayerFlags(
                             autoPlay: true,
                             mute: false,
                           ),
-                        
                         );
                         showError =
                             false; // Reset error state on successful input
