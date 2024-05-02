@@ -1,153 +1,126 @@
-import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:decoder/models/course.dart';
-import 'package:decoder/models/lesson.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:decoder/screens/single_course.dart';
-import 'package:flutter/widgets.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:decoder/providers/all_users.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:transparent_image/transparent_image.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:decoder/providers/user_data.dart';
 
 class VideoListItem extends ConsumerWidget {
   const VideoListItem({super.key, required this.course});
 
   final Course course;
+  void switchOnSingleLesson(BuildContext context, Course course) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+          builder: (ctx) => SingleCourse(
+                course: course,
+              )),
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final data = ref.watch(allUsersProvider);
-    File? imageFile;
-
-    void switchOnSingleLesson(BuildContext context, Course course) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-            builder: (ctx) => SingleCourse(
-                  course: course,
-                )),
-      );
-    }
-
-    Future<File> urlToFile(String imageUrl) async {
-      final uri = Uri.parse(imageUrl);
-      final response = await http.get(uri);
-
-      final directory = await getApplicationDocumentsDirectory();
-      final imagesDirectoryPath = '${directory.path}/user_profile_images';
-      final imagesDirectory = Directory(imagesDirectoryPath);
-
-      if (!await imagesDirectory.exists()) {
-        await imagesDirectory.create(recursive: true);
-      }
-
-      final filePath =
-          '${imagesDirectory.path}/${Uri.encodeComponent(uri.pathSegments.last)}';
-      final file = File(filePath);
-      //print("Saving file to: $filePath");
-
-      await file.writeAsBytes(response.bodyBytes);
-
-      return file;
-    }
+    final userSnapshot = ref.watch(userDataProvider2(course.userId));
+    final courseImage = ref.watch(courseImageProvider(course.image!));
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 30),
-      elevation: 2,
-      child: InkWell(
-        onTap: () {
-          switchOnSingleLesson(context, course);
-        },
-        splashColor: Theme.of(context).colorScheme.secondaryContainer,
-        borderRadius: BorderRadius.circular(15),
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: StreamBuilder(
-              stream:
-              //perf improve(courses instead of users)
-                  FirebaseFirestore.instance.collection('users').snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.hasData && !snapshot.hasError) {
-                  for (var doc in snapshot.data!.docs) {
-                    if (doc.id == course.userId) {
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+        margin: const EdgeInsets.only(bottom: 30),
+        elevation: 2,
+        child: InkWell(
+          onTap: () {
+            switchOnSingleLesson(context, course);
+          },
+          splashColor: Theme.of(context).colorScheme.secondaryContainer,
+          borderRadius: BorderRadius.circular(15),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: userSnapshot.when(
+                data: (doc) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          Row(
-                            children: [
-                              CircleAvatar(
-                                radius:
-                                    20,
-                                backgroundImage:
-                                    NetworkImage(doc.data()['image_url']),
-                                backgroundColor: Colors
-                                    .transparent,
-                              ),
-                              const SizedBox(
-                                width: 10,
-                              ),
-                              Expanded(
-                                child: Text(
-                                  '${doc.data()['first_name']} ${doc.data()['last_name']}',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium!
-                                      .copyWith(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onBackground),
-                                ),
-                              ),
-                            ],
+                          CircleAvatar(
+                            radius: 20,
+                            backgroundImage: NetworkImage(doc['image_url']),
+                            backgroundColor: Colors.transparent,
                           ),
                           const SizedBox(
-                            height: 10,
+                            width: 10,
                           ),
-                          Hero(
-                            tag: course.id,
-                            child: FadeInImage(
-                              placeholder: MemoryImage(kTransparentImage),
-                              image: NetworkImage(course.image!),
-                              fit: BoxFit.fitHeight,
-                              height: 200,
-                              width: double.infinity,
+                          Expanded(
+                            child: Text(
+                              '${doc['first_name']} ${doc['last_name']}',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium!
+                                  .copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onBackground),
                             ),
                           ),
-                          const SizedBox(
-                            height: 10,
-                          ),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      Hero(
+                        tag: course.id,
+                        child: FadeInImage(
+                          placeholder: MemoryImage(kTransparentImage),
+                          image: courseImage,
+                          fit: BoxFit.fitHeight,
+                          height: 200,
+                          width: double.infinity,
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      Text(
+                        course.title,
+                        style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                            color: Theme.of(context).colorScheme.onBackground,
+                            fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(
+                        height: 5,
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
                           Text(
-                            course.title,
+                            'Lessons: ${course.lessons.length}',
                             style: Theme.of(context)
                                 .textTheme
-                                .titleLarge!
+                                .bodyLarge!
                                 .copyWith(
                                     color: Theme.of(context)
                                         .colorScheme
-                                        .onBackground,
-                                    fontWeight: FontWeight.bold),
+                                        .onBackground),
+                          ),
+                          Text(
+                            'Tests: ${course.tests.length}',
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyLarge!
+                                .copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onBackground),
                           ),
                           const SizedBox(
-                            height: 5,
+                            width: 40,
                           ),
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Lessons: ${course.lessons.length}',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyLarge!
-                                    .copyWith(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onBackground),
-                              ),
-                              Text(
-                                'Tests: ${course.tests.length}',
+                                '${course.enrolledUsers.length}',
                                 style: Theme.of(context)
                                     .textTheme
                                     .bodyLarge!
@@ -157,37 +130,21 @@ class VideoListItem extends ConsumerWidget {
                                             .onBackground),
                               ),
                               const SizedBox(
-                                width: 40,
+                                width: 2,
                               ),
-                              Row(
-                                children: [
-                                  Text(
-                                    '${course.enrolledUsers.length}',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyLarge!
-                                        .copyWith(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .onBackground),
-                                  ),
-                                  const SizedBox(
-                                    width: 2,
-                                  ),
-                                  const Icon(Icons.people_alt),
-                                ],
-                              ),
+                              const Icon(Icons.people_alt),
                             ],
                           ),
                         ],
-                      );
-                    }
-                  }
-                }
-                return const Text('Error');
-              }),
-        ),
-      ),
-    );
+                      ),
+                    ],
+                  );
+                },
+                loading: () => const CircularProgressIndicator(),
+                error: (error, stack) => Text('Error: $error'),
+              ),
+            ),
+          ),
+        ));
   }
 }

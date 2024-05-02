@@ -124,22 +124,38 @@ class _LessonScreenState extends State<LessonScreen> {
                       ),
                     ),
                   ),
-                  
                 ],
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Row(
-                      children: [
-                        Text(
-                          'Viewers: ',
-                          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                              color: Theme.of(context).colorScheme.onBackground),
-                        ),
-                        Text('${widget.lesson.learned.length}' ,style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                              color: Theme.of(context).colorScheme.onBackground),),
-                      ],
+                  children: [
+                    Text(
+                      'Viewers: ',
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          color: Theme.of(context).colorScheme.onBackground),
                     ),
+                    StreamBuilder(
+                        stream: FirebaseFirestore.instance
+                            .collection('courses')
+                            .doc(widget.course.id)
+                            .collection('lessons')
+                            .doc(widget.lessonId)
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          return Text(
+                            '${snapshot.data!.data()!['learned'].length}',
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onBackground),
+                          );
+                        }),
+                  ],
+                ),
               ),
               const SizedBox(
                 height: 50,

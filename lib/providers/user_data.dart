@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:decoder/models/user.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
@@ -89,6 +90,13 @@ class UserDataNotifier extends StateNotifier<UserModel?> {
     return file;
   }
 }
+final userDataProvider2 = StreamProvider.family<DocumentSnapshot<Map<String, dynamic>>, String>((ref, userId) {
+  return FirebaseFirestore.instance.collection('users').doc(userId).snapshots();
+});
+final courseImageProvider = Provider.family<ImageProvider, String>((ref, imageUrl) {
+  return NetworkImage(imageUrl);
+});
+
 
 final userDataProvider =
     StateNotifierProvider<UserDataNotifier, UserModel?>((ref) {

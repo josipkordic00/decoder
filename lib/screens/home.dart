@@ -24,6 +24,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
+  final user = FirebaseAuth.instance.currentUser;
   @override
   void initState() {
     if (FirebaseAuth.instance.currentUser == null) {
@@ -67,32 +68,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             return ListView.builder(
               itemCount: loadedCourses.length,
               itemBuilder: (context, index) {
-                List<dynamic> lessonWidget = [];
-                var lessonDocRef = FirebaseFirestore.instance
+                var courseRef = FirebaseFirestore.instance
                     .collection('courses')
-                    .doc(loadedCourses[index].id)
-                    .collection('lessons').orderBy('createdAt', descending: false);
-                lessonDocRef.get().then((querySnapshot) {
-                    for (var lesson in querySnapshot.docs) {
-                  lessonWidget.add(Lesson(
-                      id: lesson.id,
-                      title: lesson.data()['title'],
-                      url: lesson.data()['url'],
-                      learned: lesson.data()['learned']));
-                  }
-                }).catchError((error) {
-                  print("Error getting lessons: $error");
-                });
-                
-                var course = Course(
-                    title: loadedCourses[index].data()['name'],
-                    lessons: lessonWidget,
-                    id: loadedCourses[index].id,
-                    enrolledUsers: loadedCourses[index].data()['enrolled_users'],
-                    image: loadedCourses[index].data()['image_url'],
-                    userId: loadedCourses[index].data()['user_id'],
-                    tests: loadedCourses[index].data()['tests']);
-                return VideoListItem(course: course);
+                    .doc(loadedCourses[index].id);
+
+                return FutureBuilder<QuerySnapshot>(
+                  future: courseRef
+                      .collection('lessons')
+                      .orderBy('createdAt', descending: false)
+                      .get(),
+                  builder: (context, lessonSnapshot) {
+                    if (lessonSnapshot.connectionState ==
+                        ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (lessonSnapshot.hasError) {
+                      return const Text("Error loading lessons");
+                    }
+                    List<Lesson> lessons = lessonSnapshot.data!.docs
+                        .map((doc) => Lesson(
+                            id: doc.id,
+                            title: doc['title'],
+                            url: doc['url'],
+                            learned: doc['learned']))
+                        .toList();
+
+                    var course = Course(
+                        title: loadedCourses[index]['name'],
+                        lessons: lessons,
+                        id: loadedCourses[index].id,
+                        enrolledUsers: loadedCourses[index]['enrolled_users'],
+                        image: loadedCourses[index]['image_url'],
+                        userId: loadedCourses[index]['user_id'],
+                        tests: loadedCourses[index]['tests']);
+
+                    return VideoListItem(course: course);
+                  },
+                );
               },
             );
           }),
@@ -130,85 +142,118 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             drawer: const MainDrawer(),
             body: content,
-            floatingActionButton: prUser.role == "Student"
-                ? null
-                : InkWell(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (ctx) => const AddCourseScreen(),
-                        ),
-                      );
-                    },
-                    borderRadius: BorderRadius.circular(42),
-                    child: const CircleAvatar(
-                      backgroundColor: Color.fromARGB(255, 70, 49, 128),
-                      radius: 30,
-                      child: Icon(
-                        Icons.add,
-                        color: Colors.white,
-                        size: 27,
-                      ),
-                    ),
-                  ),
+            floatingActionButton: //prUser.role == "Student"
+                //? null
+                StreamBuilder(
+                    stream: FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(user!.uid)
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasError || !snapshot.hasData) {
+                        return const Center(
+                          child: Text('Error fetching data'),
+                        );
+                      } else {
+                        if (snapshot.data!.data()!['role'] == "Student") {
+                          return const Text('Error');
+                        } else {
+                          return InkWell(
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (ctx) => const AddCourseScreen(),
+                                ),
+                              );
+                            },
+                            borderRadius: BorderRadius.circular(42),
+                            child: const CircleAvatar(
+                              backgroundColor: Color.fromARGB(255, 70, 49, 128),
+                              radius: 30,
+                              child: Icon(
+                                Icons.add,
+                                color: Colors.white,
+                                size: 27,
+                              ),
+                            ),
+                          );
+                        }
+                      }
+                    }),
             floatingActionButtonLocation:
                 FloatingActionButtonLocation.centerDocked,
-            bottomNavigationBar: prUser.role == "Student"
-                ? BottomNavigationBar(
-                    onTap: _changeIndex,
-                    currentIndex: _selectedBarIndex,
-                    items: const [
-                      BottomNavigationBarItem(
-                        icon: Icon(Icons.home),
-                        label: 'Home',
-                      ),
-                      BottomNavigationBarItem(
-                        icon: Icon(Icons.play_circle_fill_rounded),
-                        label: 'Active courses',
-                      ),
-                      BottomNavigationBarItem(
-                        icon: Icon(Icons.supervised_user_circle),
-                        label: 'Instructors',
-                      ),
-                    ],
-                  )
-                : BottomAppBar(
-                    padding: const EdgeInsets.only(bottom: 1),
-                    shape: const CircularNotchedRectangle(),
-                    color: Theme.of(context).appBarTheme.backgroundColor,
-                    height: 50,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        IconButton(
-                          icon: Icon(
-                            Icons.bar_chart_outlined,
-                            color:
-                                Theme.of(context).appBarTheme.foregroundColor,
-                            size: 30,
+            bottomNavigationBar: StreamBuilder(
+                stream: FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(user!.uid)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasError || !snapshot.hasData) {
+                    return const Center(
+                      child: Text('Error fetching data'),
+                    );
+                  } else {
+                    if (snapshot.data!.data()!['role'] == "Student") {
+                      return BottomNavigationBar(
+                        onTap: _changeIndex,
+                        currentIndex: _selectedBarIndex,
+                        items: const [
+                          BottomNavigationBarItem(
+                            icon: Icon(Icons.home),
+                            label: 'Home',
                           ),
-                          onPressed: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (ctx) =>
-                                    const OverallStatisticsScreen(),
+                          BottomNavigationBarItem(
+                            icon: Icon(Icons.play_circle_fill_rounded),
+                            label: 'Active courses',
+                          ),
+                          BottomNavigationBarItem(
+                            icon: Icon(Icons.supervised_user_circle),
+                            label: 'Instructors',
+                          ),
+                        ],
+                      );
+                    } else {
+                      return BottomAppBar(
+                        padding: const EdgeInsets.only(bottom: 1),
+                        shape: const CircularNotchedRectangle(),
+                        color: Theme.of(context).appBarTheme.backgroundColor,
+                        height: 50,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                Icons.bar_chart_outlined,
+                                color: Theme.of(context)
+                                    .appBarTheme
+                                    .foregroundColor,
+                                size: 30,
                               ),
-                            );
-                          },
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (ctx) =>
+                                        const OverallStatisticsScreen(),
+                                  ),
+                                );
+                              },
+                            ),
+                            IconButton(
+                              padding: const EdgeInsets.only(left: 5),
+                              icon: Icon(
+                                Icons.playlist_play_rounded,
+                                color: Theme.of(context)
+                                    .appBarTheme
+                                    .foregroundColor,
+                                size: 30,
+                              ),
+                              onPressed: () {},
+                            ),
+                          ],
                         ),
-                        IconButton(
-                          padding: const EdgeInsets.only(left: 5),
-                          icon: Icon(
-                            Icons.playlist_play_rounded,
-                            color:
-                                Theme.of(context).appBarTheme.foregroundColor,
-                            size: 30,
-                          ),
-                          onPressed: () {},
-                        ),
-                      ],
-                    ),
-                  ),
-          );
+                      );
+                    }
+                  }
+                }));
   }
 }

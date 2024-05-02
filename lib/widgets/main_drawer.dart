@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:decoder/providers/user_data.dart'; 
+import 'package:decoder/providers/user_data.dart';
 import 'package:decoder/screens/user_settings.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:flutter/cupertino.dart';
@@ -19,21 +19,24 @@ class MainDrawer extends ConsumerStatefulWidget {
 class _MainDrawerState extends ConsumerState<MainDrawer> {
   final user = auth.FirebaseAuth.instance.currentUser!;
   void _deleteUser() async {
-  try {
-    await FirebaseFirestore.instance.collection('users').doc(user.uid).delete();
-    
-    await user.delete();
-    
-    // Sign out
-    await auth.FirebaseAuth.instance.signOut();
-  } catch (error) {
-    print("An error occurred during account deletion: $error");
-  }
-}
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .delete();
 
-  void _changeRole() async {
+      await user.delete();
+
+      // Sign out
+      await auth.FirebaseAuth.instance.signOut();
+    } catch (error) {
+      print("An error occurred during account deletion: $error");
+    }
+  }
+
+  void _changeRole(BuildContext context) async {
     ref.read(userDataProvider.notifier).changeRole(user.uid);
-    await auth.FirebaseAuth.instance.signOut();
+    Navigator.of(context).pop();
   }
 
   @override
@@ -108,7 +111,6 @@ class _MainDrawerState extends ConsumerState<MainDrawer> {
               }
             },
           ),
-          
           ListTile(
             leading: const Icon(Icons.change_circle),
             title: Text(
@@ -118,14 +120,14 @@ class _MainDrawerState extends ConsumerState<MainDrawer> {
                   fontSize: 20),
             ),
             onTap: () {
-              _changeRole();
+              _changeRole(context);
               ScaffoldMessenger.of(context).clearSnackBars();
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   duration: Durations.long4,
                   backgroundColor: Theme.of(context).colorScheme.primary,
                   content: Text(
-                    "Role changed! Please log in",
+                    "Role changed!",
                     style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                         color: Theme.of(context).colorScheme.onPrimary),
                   ),
