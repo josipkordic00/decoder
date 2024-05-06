@@ -31,19 +31,14 @@ class UserDataNotifier extends StateNotifier<UserModel?> {
       await FirebaseFirestore.instance.collection('users').doc(userId).update({
         'role': roles[0],
       });
-
-      // Assuming you have a User model that includes the role and other details
-
-      print('state updated to ${roles[0]}');
     } catch (e) {
-      // Handle errors, e.g., print them or use a state to show an error message
+     
       print("Error updating user role: $e");
     }
   }
 
   void getFromFirestore(String userId) async {
     try {
-      //print('Fetching user data for $userId'); // Log the attempt to fetch
       final doc = await FirebaseFirestore.instance
           .collection('users')
           .doc(userId)
@@ -54,14 +49,14 @@ class UserDataNotifier extends StateNotifier<UserModel?> {
         if (data['image_url'] != null) {
           imageFile = await _urlToFile(data['image_url']);
         }
-        //print('User data fetched successfully'); // Log successful fetch
+        //print('User data fetched successfully');
         state = UserModel(
             firstName: data['first_name'],
             lastName: data['last_name'],
             email: data['email'],
             image: imageFile,
             role: data['role']);
-        //print('State updated with user data $data'); // Log state update
+        //print('State updated with user data $data');
       }
     } catch (e) {
       print("Error fetching user data: $e");
@@ -90,9 +85,7 @@ class UserDataNotifier extends StateNotifier<UserModel?> {
     return file;
   }
 }
-final userDataProvider2 = StreamProvider.family<DocumentSnapshot<Map<String, dynamic>>, String>((ref, userId) {
-  return FirebaseFirestore.instance.collection('users').doc(userId).snapshots();
-});
+
 final courseImageProvider = Provider.family<ImageProvider, String>((ref, imageUrl) {
   return NetworkImage(imageUrl);
 });

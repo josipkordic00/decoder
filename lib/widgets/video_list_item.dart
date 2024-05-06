@@ -1,10 +1,10 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:decoder/models/course.dart';
 import 'package:flutter/material.dart';
 import 'package:decoder/screens/single_course.dart';
 import 'package:transparent_image/transparent_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:decoder/providers/user_data.dart';
+import 'package:decoder/providers/all_users.dart';
 
 class VideoListItem extends ConsumerWidget {
   const VideoListItem({super.key, required this.course});
@@ -21,8 +21,14 @@ class VideoListItem extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final userSnapshot = ref.watch(userDataProvider2(course.userId));
     final courseImage = ref.watch(courseImageProvider(course.image!));
+    final allUsers = ref.watch(allUsersProvider);
+
+    final thisUser = allUsers.singleWhere(
+      (element) => element['id'] == course.userId,
+    );
+
+  
 
     return Card(
         margin: const EdgeInsets.only(bottom: 30),
@@ -37,16 +43,14 @@ class VideoListItem extends ConsumerWidget {
             padding: const EdgeInsets.all(8.0),
             child: Padding(
               padding: const EdgeInsets.all(8.0),
-              child: userSnapshot.when(
-                data: (doc) {
-                  return Column(
+              child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
                           CircleAvatar(
                             radius: 20,
-                            backgroundImage: NetworkImage(doc['image_url']),
+                            backgroundImage: NetworkImage(thisUser['image_url']),
                             backgroundColor: Colors.transparent,
                           ),
                           const SizedBox(
@@ -54,7 +58,7 @@ class VideoListItem extends ConsumerWidget {
                           ),
                           Expanded(
                             child: Text(
-                              '${doc['first_name']} ${doc['last_name']}',
+                              '${thisUser['first_name']} ${thisUser['last_name']}',
                               style: Theme.of(context)
                                   .textTheme
                                   .titleMedium!
@@ -138,11 +142,10 @@ class VideoListItem extends ConsumerWidget {
                         ],
                       ),
                     ],
-                  );
-                },
-                loading: () => const CircularProgressIndicator(),
-                error: (error, stack) => Text('Error: $error'),
-              ),
+                  ),
+                
+                
+              
             ),
           ),
         ));

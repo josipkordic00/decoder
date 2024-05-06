@@ -80,9 +80,12 @@ class CustomSearchDelegate extends SearchDelegate {
   @override
   Widget buildResults(BuildContext context) {
     List<List<dynamic>> matchQuery = [];
+    //making list type of[model, icon, string] for users
     for (var i in users) {
+      //map users name into course model title for easier applying in search
       String concat = '${i['first_name']} ${i['last_name']}';
       if (concat.toLowerCase().contains(query.toLowerCase())) {
+        
         matchQuery.add([
           UserTitle(
             title: concat,
@@ -97,6 +100,8 @@ class CustomSearchDelegate extends SearchDelegate {
         ]);
       }
     }
+
+    //making list type of[model, icon, string] for courses
     for (var i in courses) {
       if (i.title.toLowerCase().contains(query.toLowerCase())) {
         matchQuery.add([
@@ -109,47 +114,54 @@ class CustomSearchDelegate extends SearchDelegate {
         ]);
       }
     }
-    return ListView.builder(
-        itemCount: matchQuery.length,
-        itemBuilder: (context, index) {
-          var result = matchQuery[index];
-          return ListTile(
-            onTap: () {
-              if (result[2] == 'User') {
-                var userData =
-                    users.singleWhere((e) => e['id'] == result[0].id);
-                UserModel user = UserModel(
-                    firstName: userData['first_name'],
-                    lastName: userData['last_name'],
-                    email: userData['email'],
-                    role: userData['role']);
-                Navigator.of(context).pushReplacement(MaterialPageRoute(
-                    builder: (ctx) =>
-                        UserProfile(user: user, userId: userData['id'])));
-              } else {
-                Navigator.of(context).pushReplacement(MaterialPageRoute(
-                    builder: (ctx) => SingleCourse(course: result[0])));
-              }
-            },
-            leading: Icon(
-              Icons.account_circle,
-              color: Theme.of(context).colorScheme.onBackground,
-            ),
-            title: Text(
-              result[0].title,
-              style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  color: Theme.of(context).colorScheme.onBackground,
-                  fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text(
-              result[2] == 'User' ? result[0].email : result[0].createdAt,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall!
-                  .copyWith(color: Theme.of(context).colorScheme.onBackground),
-            ),
-          );
-        });
+
+    return Container(
+      decoration: BoxDecoration(
+          gradient: LinearGradient(colors: [
+        Theme.of(context).colorScheme.background,
+        Theme.of(context).appBarTheme.backgroundColor!
+      ], begin: Alignment.topCenter, end: Alignment.bottomCenter)),
+      child: ListView.builder(
+          itemCount: matchQuery.length,
+          itemBuilder: (context, index) {
+            //result = current index in list[widget, icon, string]
+            var result = matchQuery[index];
+            return ListTile(
+              onTap: () {
+                if (result[2] == 'User') {
+                  var userData =
+                      users.singleWhere((e) => e['id'] == result[0].id);
+                  UserModel user = UserModel(
+                      firstName: userData['first_name'],
+                      lastName: userData['last_name'],
+                      email: userData['email'],
+                      image: userData['image'],
+                      role: userData['role']);
+                  Navigator.of(context).pushReplacement(MaterialPageRoute(
+                      builder: (ctx) =>
+                          UserProfile(user: user, userId: userData['id'])));
+                } else {
+                  Navigator.of(context).pushReplacement(MaterialPageRoute(
+                      builder: (ctx) => SingleCourse(course: result[0])));
+                }
+              },
+              leading: result[1],
+              title: Text(
+                result[0].title,
+                style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                    color: Theme.of(context).colorScheme.onBackground,
+                    fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(
+                result[2] == 'User'
+                    ? result[0].email
+                    : 'Enrolled users ${result[0].enrolledUsers.length}',
+                style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                    color: Theme.of(context).colorScheme.onBackground),
+              ),
+            );
+          }),
+    );
   }
 
   @override
