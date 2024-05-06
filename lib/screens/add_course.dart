@@ -84,7 +84,7 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
         'user_id': userId,
         'tests': firestoreTests,
         'createdAt': Timestamp.now(),
-        'enrolled_users': []
+        'enrolled_users': [userId]
       }, SetOptions(merge: true));
       for (var lesson in firestoreLessons) {
         await firestoreInstance

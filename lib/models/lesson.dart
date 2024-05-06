@@ -25,4 +25,13 @@ class Lesson {
       'createdAt': Timestamp.now()
     };
   }
+
+  factory Lesson.fromMap(Map<String, dynamic> map, String documentId) {
+    return Lesson(
+      id: documentId,
+      title: map['title'] as String,
+      url: map['url'] as String,
+      learned: map['learned'] as List<dynamic>,
+    );
+  }
 }

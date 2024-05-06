@@ -39,6 +39,7 @@ class App extends StatelessWidget {
         cardTheme: const CardTheme().copyWith(
           color: kDarkColorScheme.background,
         ),
+        
         appBarTheme: const AppBarTheme(
           backgroundColor: Color.fromARGB(
               255, 20, 20, 20), // Set the background color of the app bar

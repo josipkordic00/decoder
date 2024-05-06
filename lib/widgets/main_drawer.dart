@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:decoder/providers/user_data.dart';
+import 'package:decoder/screens/home.dart';
 import 'package:decoder/screens/user_settings.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:flutter/cupertino.dart';
@@ -36,7 +37,8 @@ class _MainDrawerState extends ConsumerState<MainDrawer> {
 
   void _changeRole(BuildContext context) async {
     ref.read(userDataProvider.notifier).changeRole(user.uid);
-    Navigator.of(context).pop();
+    Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (ctx) => const HomeScreen()));
   }
 
   @override

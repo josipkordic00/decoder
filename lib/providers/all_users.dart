@@ -1,44 +1,46 @@
 import 'dart:io';
-import 'package:http/http.dart' as http;
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 
 class AllUsersNotifier extends StateNotifier<List<Map<String, dynamic>>> {
   AllUsersNotifier() : super([]);
 
   void getAllUsersFromFirestore() async {
-    File? imageFile;
-    final users = await FirebaseFirestore.instance.collection('users').get();
-    for (var doc in users.docs) {
-      Map<String, dynamic> map = doc.data();
-      imageFile = await _urlToFile(doc.data()['image_url']);
-      final idEntry = <String, dynamic>{'id': doc.id};
-      final imageEntry = <String, dynamic>{'image': imageFile};
-      map.addEntries(idEntry.entries);
-      map.addEntries(imageEntry.entries);
-      state = [...state, map];
-    }
+    final usersSnapshot =
+        await FirebaseFirestore.instance.collection('users').get();
+    List<Future<Map<String, dynamic>>> userFutures =
+        usersSnapshot.docs.map((doc) async {
+      var userMap = doc.data();
+      File? imageFile = await _urlToFile(userMap['image_url']);
+      userMap['id'] = doc.id;
+      userMap['image'] = imageFile;
+      return userMap;
+    }).toList();
+
+    // Execute all futures in parallel and wait for them to complete
+    List<Map<String, dynamic>> users = await Future.wait(userFutures);
+    state = users;// Update state once with all user data
   }
+
+  
+
   Future<File> _urlToFile(String imageUrl) async {
     final uri = Uri.parse(imageUrl);
-    final response = await http.get(uri);
-
     final directory = await getApplicationDocumentsDirectory();
-    final imagesDirectoryPath = '${directory.path}/user_profile_images';
-    final imagesDirectory = Directory(imagesDirectoryPath);
+    final filePath =
+        '${directory.path}/user_profile_images/${Uri.encodeComponent(uri.pathSegments.last)}';
+    final file = File(filePath);
 
-    if (!await imagesDirectory.exists()) {
-      await imagesDirectory.create(recursive: true);
+    // Check if file already exists to avoid re-downloading
+    if (await file.exists()) {
+      return file;
     }
 
-    final filePath =
-        '${imagesDirectory.path}/${Uri.encodeComponent(uri.pathSegments.last)}';
-    final file = File(filePath);
-    //print("Saving file to: $filePath");
-
+    // Download only if the file does not exist
+    final response = await http.get(uri);
     await file.writeAsBytes(response.bodyBytes);
-
     return file;
   }
 }

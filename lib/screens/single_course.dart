@@ -3,7 +3,6 @@ import 'package:decoder/models/course.dart';
 import 'package:decoder/models/lesson.dart';
 import 'package:decoder/screens/lesson_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 class SingleCourse extends StatefulWidget {

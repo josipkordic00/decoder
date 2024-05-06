@@ -5,13 +5,13 @@ import 'package:decoder/screens/add_course.dart';
 import 'package:decoder/screens/owned_courses.dart';
 import 'package:decoder/screens/profile_statistics.dart';
 import 'package:decoder/widgets/courses_list.dart';
-import 'package:decoder/widgets/users_list.dart';
+import 'package:decoder/widgets/user_profile.dart';
 import 'package:decoder/widgets/video_list_item.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:decoder/widgets/main_drawer.dart';
 import 'package:decoder/providers/all_users.dart';
-import 'package:decoder/data/dummydata.dart';
+import 'package:decoder/providers/course_data.dart';
 import 'package:decoder/widgets/custom_search_delegate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:decoder/providers/user_data.dart';
@@ -24,6 +24,8 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
+  List<QueryDocumentSnapshot<Map<String, dynamic>>> allCourses = [];
+  List<Course> activeCourses = [];
   final user = FirebaseAuth.instance.currentUser;
   @override
   void initState() {
@@ -33,6 +35,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final userId = FirebaseAuth.instance.currentUser!.uid;
     ref.read(userDataProvider.notifier).getFromFirestore(userId);
     ref.read(allUsersProvider.notifier).getAllUsersFromFirestore();
+    ref.read(allCoursesProvider.notifier).getAllCoursesFromFirestore();
     super.initState();
   }
 
@@ -49,6 +52,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final prUser = ref.watch(userDataProvider);
+    final allUsers = ref.watch(allUsersProvider);
+    final List<Course> providerCourses = ref.watch(allCoursesProvider);
+
     //default content on page
     Widget content = Padding(
       padding: const EdgeInsets.only(left: 20, right: 20, top: 5),
@@ -64,6 +70,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               );
             }
             final loadedCourses = snapshot.data!.docs;
+            allCourses = loadedCourses;
 
             return ListView.builder(
               itemCount: loadedCourses.length,
@@ -100,7 +107,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         enrolledUsers: loadedCourses[index]['enrolled_users'],
                         image: loadedCourses[index]['image_url'],
                         userId: loadedCourses[index]['user_id'],
-                        tests: loadedCourses[index]['tests']);
+                        tests: loadedCourses[index]['tests'],
+                        createdAt: loadedCourses[index]['createdAt']);
 
                     return VideoListItem(course: course);
                   },
@@ -112,14 +120,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     //changing content based on tapped bottom bar
     if (_selectedBarIndex == 1) {
-      //content = CoursesList(courses: courses);
-      _selectedBarTitle = 'Courses';
+      activeCourses = providerCourses
+          .where((element) => element.enrolledUsers.contains(user!.uid))
+          .toList();
+
+      content = CoursesList(courses: activeCourses);
+      _selectedBarTitle = 'Your courses';
     } else if (_selectedBarIndex == 2) {
-      // content = UsersList(
-      //   users: users,
-      //  lessons: lessons,
-      // );
-      _selectedBarTitle = 'Instructors';
+      content = UserProfile(
+        user: prUser!,
+        userId: user!.uid,
+      );
+      _selectedBarTitle = 'Profile';
     } else {
       _selectedBarTitle = 'Home';
     }
@@ -128,73 +140,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ? const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           )
-        : Scaffold(
-            appBar: AppBar(
-              title: Text(_selectedBarTitle),
-              actions: [
-                IconButton(
-                  onPressed: () {
-                    //showSearch(context: context, delegate: CustomSearchDelegate());
-                  },
-                  icon: const Icon(Icons.search),
-                ),
-              ],
-            ),
-            drawer: const MainDrawer(),
-            body: content,
-            floatingActionButton: //prUser.role == "Student"
-                //? null
-                StreamBuilder(
-                    stream: FirebaseFirestore.instance
-                        .collection('users')
-                        .doc(user!.uid)
-                        .snapshots(),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasError || !snapshot.hasData) {
-                        return const Center(
-                          child: Text('Error fetching data'),
-                        );
-                      } else {
-                        if (snapshot.data!.data()!['role'] == "Student") {
-                          return const Text('Error');
-                        } else {
-                          return InkWell(
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (ctx) => const AddCourseScreen(),
-                                ),
-                              );
+        : StreamBuilder(
+            stream: FirebaseFirestore.instance
+                .collection('users')
+                .doc(user!.uid)
+                .snapshots(),
+            builder: (ctx, snapshot) {
+              if (snapshot.hasError || !snapshot.hasData) {
+                return const Scaffold(
+                  body: Center(
+                    child: Text('Error fetching data'),
+                  ),
+                );
+              } else {
+                if (snapshot.data!.data()!['role'] == "Student") {
+                  return Scaffold(
+                      appBar: AppBar(
+                        title: Text(_selectedBarTitle),
+                        actions: [
+                          IconButton(
+                            onPressed: () {
+                              showSearch(
+                                  context: context,
+                                  delegate: CustomSearchDelegate(
+                                      users: allUsers,
+                                      courses: providerCourses));
                             },
-                            borderRadius: BorderRadius.circular(42),
-                            child: const CircleAvatar(
-                              backgroundColor: Color.fromARGB(255, 70, 49, 128),
-                              radius: 30,
-                              child: Icon(
-                                Icons.add,
-                                color: Colors.white,
-                                size: 27,
-                              ),
-                            ),
-                          );
-                        }
-                      }
-                    }),
-            floatingActionButtonLocation:
-                FloatingActionButtonLocation.centerDocked,
-            bottomNavigationBar: StreamBuilder(
-                stream: FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(user!.uid)
-                    .snapshots(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasError || !snapshot.hasData) {
-                    return const Center(
-                      child: Text('Error fetching data'),
-                    );
-                  } else {
-                    if (snapshot.data!.data()!['role'] == "Student") {
-                      return BottomNavigationBar(
+                            icon: const Icon(Icons.search),
+                          ),
+                        ],
+                      ),
+                      drawer: const MainDrawer(),
+                      body: content,
+                      bottomNavigationBar: BottomNavigationBar(
                         onTap: _changeIndex,
                         currentIndex: _selectedBarIndex,
                         items: const [
@@ -207,13 +185,52 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             label: 'Active courses',
                           ),
                           BottomNavigationBarItem(
-                            icon: Icon(Icons.supervised_user_circle),
-                            label: 'Instructors',
+                            icon: Icon(Icons.person_2_sharp),
+                            label: 'Profile',
                           ),
                         ],
-                      );
-                    } else {
-                      return BottomAppBar(
+                      ));
+                } else {
+                  return Scaffold(
+                      appBar: AppBar(
+                        title: Text(_selectedBarTitle),
+                        actions: [
+                          IconButton(
+                            onPressed: () {
+                              showSearch(
+                                  context: context,
+                                  delegate: CustomSearchDelegate(
+                                      users: allUsers,
+                                      courses: providerCourses));
+                            },
+                            icon: const Icon(Icons.search),
+                          )
+                        ],
+                      ),
+                      drawer: const MainDrawer(),
+                      body: content,
+                      floatingActionButton: InkWell(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (ctx) => const AddCourseScreen(),
+                            ),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(42),
+                        child: const CircleAvatar(
+                          backgroundColor: Color.fromARGB(255, 70, 49, 128),
+                          radius: 30,
+                          child: Icon(
+                            Icons.add,
+                            color: Colors.white,
+                            size: 27,
+                          ),
+                        ),
+                      ),
+                      floatingActionButtonLocation:
+                          FloatingActionButtonLocation.centerDocked,
+                      bottomNavigationBar: BottomAppBar(
                         padding: const EdgeInsets.only(bottom: 1),
                         shape: const CircularNotchedRectangle(),
                         color: Theme.of(context).appBarTheme.backgroundColor,
@@ -247,13 +264,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     .foregroundColor,
                                 size: 30,
                               ),
-                              onPressed: () {},
+                              onPressed: () {
+                              
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (ctx) =>
+                                        const OwnedCoursesScreen(),
+                                  ),
+                                );
+                              },
                             ),
                           ],
                         ),
-                      );
-                    }
-                  }
-                }));
+                      ));
+                }
+              }
+            });
   }
 }
