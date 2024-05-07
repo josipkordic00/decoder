@@ -8,7 +8,7 @@ class AllCoursesNotifier extends StateNotifier<List<Course>> {
 
   void getAllCoursesFromFirestore() async {
     final coursesSnapshot =
-        await FirebaseFirestore.instance.collection('courses').get();
+        await FirebaseFirestore.instance.collection('courses').orderBy('createdAt', descending: true).get();
 
     List<Future<Course>> courseFutures = coursesSnapshot.docs.map((doc) async {
       List<Lesson> lessons = await _fetchLessonsForCourse(doc.id);
@@ -19,6 +19,7 @@ class AllCoursesNotifier extends StateNotifier<List<Course>> {
     List<Course> courses = await Future.wait(courseFutures);
     state = courses; // Update state once with all course data
   }
+
 
   Future<List<Lesson>> _fetchLessonsForCourse(String courseId) async {
     final lessonsSnapshot = await FirebaseFirestore.instance
@@ -38,3 +39,5 @@ final allCoursesProvider =
     StateNotifierProvider<AllCoursesNotifier, List<Course>>((ref) {
   return AllCoursesNotifier();
 });
+
+

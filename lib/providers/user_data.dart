@@ -32,7 +32,6 @@ class UserDataNotifier extends StateNotifier<UserModel?> {
         'role': roles[0],
       });
     } catch (e) {
-     
       print("Error updating user role: $e");
     }
   }
@@ -43,30 +42,31 @@ class UserDataNotifier extends StateNotifier<UserModel?> {
           .collection('users')
           .doc(userId)
           .get();
-      if (doc.exists) {
-        final data = doc.data()!;
-        File? imageFile;
-        if (data['image_url'] != null) {
-          imageFile = await _urlToFile(data['image_url']);
-        }
-        //print('User data fetched successfully');
-        state = UserModel(
-            firstName: data['first_name'],
-            lastName: data['last_name'],
-            email: data['email'],
-            image: imageFile,
-            role: data['role']);
-        //print('State updated with user data $data');
+
+      if (!doc.exists) {
+        print('No user found for ID: $userId');
+        return;
       }
+
+      final data = doc.data()!;
+      File? imageFile = data['image_url'] != null
+          ? await _urlToFile(data['image_url'])
+          : null;
+
+      state = UserModel(
+          firstName: data['first_name'],
+          lastName: data['last_name'],
+          email: data['email'],
+          image: imageFile,
+          role: data['role']);
     } catch (e) {
       print("Error fetching user data: $e");
     }
+    
   }
 
   Future<File> _urlToFile(String imageUrl) async {
     final uri = Uri.parse(imageUrl);
-    final response = await http.get(uri);
-
     final directory = await getApplicationDocumentsDirectory();
     final imagesDirectoryPath = '${directory.path}/user_profile_images';
     final imagesDirectory = Directory(imagesDirectoryPath);
@@ -78,18 +78,29 @@ class UserDataNotifier extends StateNotifier<UserModel?> {
     final filePath =
         '${imagesDirectory.path}/${Uri.encodeComponent(uri.pathSegments.last)}';
     final file = File(filePath);
-    //print("Saving file to: $filePath");
 
-    await file.writeAsBytes(response.bodyBytes);
+    if (await file.exists()) {
+      print("File already exists: $filePath");
+      return file;
+    }
+
+    try {
+      final response = await http.get(uri);
+      await file.writeAsBytes(response.bodyBytes);
+      print("File saved: $filePath");
+    } catch (e) {
+      print("Failed to download image: $e");
+      // Optionally, handle the error e.g., by returning a default image
+    }
 
     return file;
   }
 }
 
-final courseImageProvider = Provider.family<ImageProvider, String>((ref, imageUrl) {
+final courseImageProvider =
+    Provider.family<ImageProvider, String>((ref, imageUrl) {
   return NetworkImage(imageUrl);
 });
-
 
 final userDataProvider =
     StateNotifierProvider<UserDataNotifier, UserModel?>((ref) {

@@ -18,7 +18,8 @@ class _UserProfileState extends ConsumerState<UserProfile> {
   @override
   Widget build(BuildContext context) {
     final courses = ref.watch(allCoursesProvider);
-    final userCourses = courses.where((e)=>e.enrolledUsers.contains(widget.userId)).toList();
+    final userCourses =
+        courses.where((e) => e.enrolledUsers.contains(widget.userId)).toList();
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.only(top: 50, left: 20, right: 20),
@@ -69,36 +70,52 @@ class _UserProfileState extends ConsumerState<UserProfile> {
                 itemCount: userCourses.length,
                 itemBuilder: (context, index) {
                   final course = userCourses[index];
-                  String courseUser = ''; // Fetch course user info if needed
+                  // Fetch course user info if needed
                   return Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15.0),
-                    ),
-                    child: ListTile(
-                      onTap: () {
-                        Navigator.of(context).push(MaterialPageRoute(
-                            builder: (ctx) => SingleCourse(course: course)));
-                      },
-                      leading: Icon(Icons.play_lesson_sharp,
-                          color: Theme.of(context).colorScheme.onBackground),
-                      title: Text(
-                        course.title,
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleMedium!
-                            .copyWith(
-                              color: Theme.of(context).colorScheme.onBackground,
-                              fontWeight: FontWeight.bold,
-                            ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15.0),
                       ),
-                      subtitle: Text(
-                        courseUser,
-                        style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                              color: Theme.of(context).colorScheme.onBackground,
-                            ),
-                      ),
-                    ),
-                  );
+                      child: ListTile(
+                        onTap: () {
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (ctx) => SingleCourse(course: course)));
+                        },
+                        leading: Icon(Icons.play_lesson_sharp,
+                            color: Theme.of(context).colorScheme.onBackground),
+                        title: Text(
+                          course.title,
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium!
+                              .copyWith(
+                                color:
+                                    Theme.of(context).colorScheme.onBackground,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                        subtitle: course.userId == widget.userId
+                            ? Text(
+                                'Owned',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleSmall!
+                                    .copyWith(
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                    ),
+                              )
+                            : Text(
+                                'Participant',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleSmall!
+                                    .copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onBackground,
+                                    ),
+                              ),
+                      ));
                 },
               ),
             ),

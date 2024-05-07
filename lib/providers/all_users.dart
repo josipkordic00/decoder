@@ -21,7 +21,7 @@ class AllUsersNotifier extends StateNotifier<List<Map<String, dynamic>>> {
 
     // Execute all futures in parallel and wait for them to complete
     List<Map<String, dynamic>> users = await Future.wait(userFutures);
-    state = users;// Update state once with all user data
+    state = users;
   }
 
   

@@ -1,4 +1,5 @@
 import 'package:decoder/models/course.dart';
+import 'package:decoder/providers/course_data.dart';
 import 'package:flutter/material.dart';
 import 'package:decoder/screens/single_course.dart';
 import 'package:transparent_image/transparent_image.dart';
@@ -6,10 +7,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:decoder/providers/user_data.dart';
 import 'package:decoder/providers/all_users.dart';
 
-class VideoListItem extends ConsumerWidget {
+class VideoListItem extends ConsumerStatefulWidget {
   const VideoListItem({super.key, required this.course});
 
   final Course course;
+
+  @override
+  ConsumerState<VideoListItem> createState() => _VideoListItemState();
+}
+
+class _VideoListItemState extends ConsumerState<VideoListItem> {
   void switchOnSingleLesson(BuildContext context, Course course) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -20,22 +27,24 @@ class VideoListItem extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final courseImage = ref.watch(courseImageProvider(course.image!));
+  Widget build(BuildContext context) {
+    final courseImage = ref.watch(courseImageProvider(widget.course.image!));
     final allUsers = ref.watch(allUsersProvider);
+    final allCourses = ref.watch(allCoursesProvider);
 
     final thisUser = allUsers.singleWhere(
-      (element) => element['id'] == course.userId,
+      (element) => element['id'] == widget.course.userId,
+      orElse: () =>
+          {'first_name': 'User', 'last_name': 'Deleted', 'image': null},
     );
 
-  
 
     return Card(
         margin: const EdgeInsets.only(bottom: 30),
         elevation: 2,
         child: InkWell(
           onTap: () {
-            switchOnSingleLesson(context, course);
+            switchOnSingleLesson(context, widget.course);
           },
           splashColor: Theme.of(context).colorScheme.secondaryContainer,
           borderRadius: BorderRadius.circular(15),
@@ -44,72 +53,83 @@ class VideoListItem extends ConsumerWidget {
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 20,
-                            backgroundImage: NetworkImage(thisUser['image_url']),
-                            backgroundColor: Colors.transparent,
-                          ),
-                          const SizedBox(
-                            width: 10,
-                          ),
-                          Expanded(
-                            child: Text(
-                              '${thisUser['first_name']} ${thisUser['last_name']}',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium!
-                                  .copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onBackground),
+                      thisUser['image_url'] != null
+                          ? CircleAvatar(
+                              radius: 20,
+                              backgroundImage:
+                                  FileImage(thisUser['image']),
+                              backgroundColor: Colors.transparent,
+                            )
+                          : const CircleAvatar(
+                              radius: 20,
+                              backgroundColor: Colors.transparent,
                             ),
-                          ),
-                        ],
-                      ),
                       const SizedBox(
-                        height: 10,
+                        width: 10,
                       ),
-                      Hero(
-                        tag: course.id,
-                        child: FadeInImage(
-                          placeholder: MemoryImage(kTransparentImage),
-                          image: courseImage,
-                          fit: BoxFit.fitHeight,
-                          height: 200,
-                          width: double.infinity,
+                      Expanded(
+                        child: Text(
+                          '${thisUser['first_name']} ${thisUser['last_name']}',
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium!
+                              .copyWith(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onBackground),
                         ),
                       ),
-                      const SizedBox(
-                        height: 10,
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  Hero(
+                    tag: widget.course.id,
+                    child: FadeInImage(
+                      placeholder: MemoryImage(kTransparentImage),
+                      image: courseImage,
+                      fit: BoxFit.fitHeight,
+                      height: 200,
+                      width: double.infinity,
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  Text(
+                    widget.course.title,
+                    style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                        color: Theme.of(context).colorScheme.onBackground,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Lessons: ${widget.course.lessons.length}',
+                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                            color: Theme.of(context).colorScheme.onBackground),
                       ),
                       Text(
-                        course.title,
-                        style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                            color: Theme.of(context).colorScheme.onBackground,
-                            fontWeight: FontWeight.bold),
+                        'Tests: ${widget.course.tests.length}',
+                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                            color: Theme.of(context).colorScheme.onBackground),
                       ),
                       const SizedBox(
-                        height: 5,
+                        width: 40,
                       ),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Lessons: ${course.lessons.length}',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyLarge!
-                                .copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onBackground),
-                          ),
-                          Text(
-                            'Tests: ${course.tests.length}',
+                            '${widget.course.enrolledUsers.length}',
                             style: Theme.of(context)
                                 .textTheme
                                 .bodyLarge!
@@ -119,33 +139,15 @@ class VideoListItem extends ConsumerWidget {
                                         .onBackground),
                           ),
                           const SizedBox(
-                            width: 40,
+                            width: 2,
                           ),
-                          Row(
-                            children: [
-                              Text(
-                                '${course.enrolledUsers.length}',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyLarge!
-                                    .copyWith(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onBackground),
-                              ),
-                              const SizedBox(
-                                width: 2,
-                              ),
-                              const Icon(Icons.people_alt),
-                            ],
-                          ),
+                          const Icon(Icons.people_alt),
                         ],
                       ),
                     ],
                   ),
-                
-                
-              
+                ],
+              ),
             ),
           ),
         ));

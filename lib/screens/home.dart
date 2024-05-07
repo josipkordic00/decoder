@@ -34,6 +34,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
     final userId = FirebaseAuth.instance.currentUser!.uid;
     ref.read(userDataProvider.notifier).getFromFirestore(userId);
+    print('read pozvan');
     ref.read(allUsersProvider.notifier).getAllUsersFromFirestore();
     ref.read(allCoursesProvider.notifier).getAllCoursesFromFirestore();
     super.initState();
@@ -61,58 +62,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: StreamBuilder(
           stream: FirebaseFirestore.instance
               .collection('courses')
-              .orderBy('createdAt', descending: true)
+              .orderBy('createdAt', descending: false)
               .snapshots(),
           builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
-            }
-            final loadedCourses = snapshot.data!.docs;
-            allCourses = loadedCourses;
-
+            ref.read(allCoursesProvider.notifier).getAllCoursesFromFirestore();
             return ListView.builder(
-              itemCount: loadedCourses.length,
+              itemCount: providerCourses.length,
               itemBuilder: (context, index) {
-                var courseRef = FirebaseFirestore.instance
-                    .collection('courses')
-                    .doc(loadedCourses[index].id);
-
-                return FutureBuilder<QuerySnapshot>(
-                  future: courseRef
-                      .collection('lessons')
-                      .orderBy('createdAt', descending: false)
-                      .get(),
-                  builder: (context, lessonSnapshot) {
-                    if (lessonSnapshot.connectionState ==
-                        ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (lessonSnapshot.hasError) {
-                      return const Text("Error loading lessons");
-                    }
-                    List<Lesson> lessons = lessonSnapshot.data!.docs
-                        .map((doc) => Lesson(
-                            id: doc.id,
-                            title: doc['title'],
-                            url: doc['url'],
-                            learned: doc['learned']))
-                        .toList();
-
-                    var course = Course(
-                        title: loadedCourses[index]['name'],
-                        lessons: lessons,
-                        id: loadedCourses[index].id,
-                        enrolledUsers: loadedCourses[index]['enrolled_users'],
-                        image: loadedCourses[index]['image_url'],
-                        userId: loadedCourses[index]['user_id'],
-                        tests: loadedCourses[index]['tests'],
-                        createdAt: loadedCourses[index]['createdAt']);
-
-                    return VideoListItem(course: course);
-                  },
-                );
+                var course = Course(
+                    title: providerCourses[index].title,
+                    lessons: providerCourses[index].lessons,
+                    id: providerCourses[index].id,
+                    enrolledUsers: providerCourses[index].enrolledUsers,
+                    image: providerCourses[index].image,
+                    userId: providerCourses[index].userId,
+                    tests: providerCourses[index].tests,
+                    createdAt: providerCourses[index].createdAt);
+                return VideoListItem(course: course);
               },
             );
           }),
@@ -265,7 +231,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 size: 30,
                               ),
                               onPressed: () {
-                              
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
                                     builder: (ctx) =>

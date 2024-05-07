@@ -47,7 +47,7 @@ class _CoursesListState extends ConsumerState<CoursesList> {
       itemCount: widget.courses.length,
       itemBuilder: (context, index) {
         var courseUser =
-            userNames[widget.courses[index].userId] ?? 'Loading...';
+            userNames[widget.courses[index].userId] ?? 'User Deleted';
 
         return ListTile(
           onTap: () {

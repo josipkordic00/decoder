@@ -4,23 +4,26 @@ import 'package:decoder/models/lesson.dart';
 import 'package:decoder/screens/lesson_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:decoder/providers/all_users.dart';
 
-class SingleCourse extends StatefulWidget {
+class SingleCourse extends ConsumerStatefulWidget {
   const SingleCourse({super.key, required this.course});
 
   final Course course;
   @override
-  State<SingleCourse> createState() {
+  ConsumerState<SingleCourse> createState() {
     return _SingleCourseState();
   }
 }
 
-class _SingleCourseState extends State<SingleCourse> {
+class _SingleCourseState extends ConsumerState<SingleCourse> {
   bool isEnrolled = false;
   bool onTapVideo = false;
   final Set<int> _tappedTiles = <int>{};
   final user = FirebaseAuth.instance.currentUser;
   var _selectedRowItem = true;
+  var courseOwner = '';
 
   void _joinCourse() async {
     await FirebaseFirestore.instance
@@ -46,16 +49,25 @@ class _SingleCourseState extends State<SingleCourse> {
 
   @override
   Widget build(BuildContext context) {
+    final allUsers = ref.watch(allUsersProvider);
+    final courseOwner = allUsers.singleWhere(
+      (e) => e['id'] == widget.course.id,
+      orElse: () =>
+          {'first_name': 'User', 'last_name': 'Deleted', 'image_url': null},
+    );
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
-            Hero(
-              tag: widget.course.id,
-              child: Image.network(
-                widget.course.image!,
-                height: 300,
-                width: double.infinity,
+            Padding(
+              padding: const EdgeInsets.only(top: 18.0),
+              child: Hero(
+                tag: widget.course.id,
+                child: Image.network(
+                  widget.course.image!,
+                  height: 300,
+                  width: double.infinity,
+                ),
               ),
             ),
             isEnrolled
@@ -133,7 +145,7 @@ class _SingleCourseState extends State<SingleCourse> {
                     ),
                   )
                 : const SizedBox(
-                    height: 100,
+                    height: 40,
                   ),
             isEnrolled
                 ?
@@ -231,16 +243,25 @@ class _SingleCourseState extends State<SingleCourse> {
                             color: Theme.of(context).colorScheme.onBackground),
                       )
                 : Padding(
-                    padding: const EdgeInsets.only(top: 50.0),
+                    padding: const EdgeInsets.only(top: 10.0),
                     child: Center(
-                      child: ElevatedButton.icon(
-                          onPressed: _joinCourse,
-                          icon: Icon(
-                            Icons.add_circle,
-                            color: Theme.of(context).colorScheme.onBackground,
+                      child: Column(
+                        children: [
+                          Text(
+                            widget.course.title,
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge!
+                                .copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onBackground),
                           ),
-                          label: Text(
-                            'Join course',
+                          const SizedBox(
+                            height: 5,
+                          ),
+                          Text(
+                            '${courseOwner['first_name']} ${courseOwner['last_name']}',
                             style: Theme.of(context)
                                 .textTheme
                                 .bodyMedium!
@@ -248,7 +269,29 @@ class _SingleCourseState extends State<SingleCourse> {
                                     color: Theme.of(context)
                                         .colorScheme
                                         .onBackground),
-                          )),
+                          ),
+                          const SizedBox(
+                            height: 50,
+                          ),
+                          ElevatedButton.icon(
+                              onPressed: _joinCourse,
+                              icon: Icon(
+                                Icons.add_circle,
+                                color:
+                                    Theme.of(context).colorScheme.onBackground,
+                              ),
+                              label: Text(
+                                'Join course',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium!
+                                    .copyWith(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onBackground),
+                              )),
+                        ],
+                      ),
                     ),
                   )
           ],
