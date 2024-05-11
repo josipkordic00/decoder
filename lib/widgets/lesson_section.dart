@@ -19,8 +19,9 @@ class LessonSection extends StatelessWidget {
         decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(15),
             gradient: LinearGradient(colors: [
-              Theme.of(context).colorScheme.secondaryContainer,
-              Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.5)
+              Theme.of(context).colorScheme.primaryContainer,
+              Theme.of(context).colorScheme.primaryContainer.withOpacity(0.5)
+              
             ], begin: Alignment.topLeft, end: Alignment.bottomRight)),
         child: Align(
           alignment: Alignment.centerLeft,

@@ -1,11 +1,13 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:decoder/providers/all_users.dart';
 import 'package:decoder/models/course.dart';
 import 'package:decoder/models/lesson.dart';
 import 'package:decoder/screens/lesson_screen.dart';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:decoder/providers/all_users.dart';
 
 class SingleCourse extends ConsumerStatefulWidget {
   const SingleCourse({super.key, required this.course});
@@ -86,7 +88,7 @@ class _SingleCourseState extends ConsumerState<SingleCourse> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10.0, vertical: 20),
                             child: Text(
-                              'Lessons',
+                              'Content',
                               style: Theme.of(context)
                                   .textTheme
                                   .titleLarge!

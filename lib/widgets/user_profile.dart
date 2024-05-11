@@ -1,8 +1,9 @@
 import 'package:decoder/models/user.dart';
+import 'package:decoder/providers/course_data.dart';
 import 'package:decoder/screens/single_course.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:decoder/providers/course_data.dart';
 
 class UserProfile extends ConsumerStatefulWidget {
   const UserProfile({super.key, required this.user, required this.userId});

@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+
 import 'package:decoder/screens/register.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
+
+
 
 final _firebase = FirebaseAuth.instance;
 

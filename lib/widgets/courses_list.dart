@@ -1,10 +1,11 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:decoder/models/course.dart';
-import 'package:decoder/models/lesson.dart';
 import 'package:decoder/screens/single_course.dart';
+import 'package:decoder/providers/all_users.dart';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:decoder/providers/all_users.dart';
 
 class CoursesList extends ConsumerStatefulWidget {
   const CoursesList({super.key, required this.courses});

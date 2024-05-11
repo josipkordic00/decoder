@@ -1,20 +1,22 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:decoder/models/course.dart';
-import 'package:decoder/models/lesson.dart';
 import 'package:decoder/screens/add_course.dart';
 import 'package:decoder/screens/owned_courses.dart';
 import 'package:decoder/screens/profile_statistics.dart';
-import 'package:decoder/widgets/courses_list.dart';
-import 'package:decoder/widgets/user_profile.dart';
-import 'package:decoder/widgets/video_list_item.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
-import 'package:decoder/widgets/main_drawer.dart';
 import 'package:decoder/providers/all_users.dart';
+import 'package:decoder/providers/user_data.dart';
 import 'package:decoder/providers/course_data.dart';
 import 'package:decoder/widgets/custom_search_delegate.dart';
+import 'package:decoder/widgets/courses_list.dart';
+import 'package:decoder/widgets/main_drawer.dart';
+import 'package:decoder/widgets/video_list_item.dart';
+import 'package:decoder/widgets/user_profile.dart';
+
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:decoder/providers/user_data.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -34,7 +36,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
     final userId = FirebaseAuth.instance.currentUser!.uid;
     ref.read(userDataProvider.notifier).getFromFirestore(userId);
-    print('read pozvan');
+ 
     ref.read(allUsersProvider.notifier).getAllUsersFromFirestore();
     ref.read(allCoursesProvider.notifier).getAllCoursesFromFirestore();
     super.initState();
@@ -72,6 +74,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 var course = Course(
                     title: providerCourses[index].title,
                     lessons: providerCourses[index].lessons,
+                    notes: providerCourses[index].notes,
                     id: providerCourses[index].id,
                     enrolledUsers: providerCourses[index].enrolledUsers,
                     image: providerCourses[index].image,

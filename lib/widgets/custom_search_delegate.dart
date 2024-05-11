@@ -2,6 +2,7 @@ import 'package:decoder/models/course.dart';
 import 'package:decoder/models/user.dart';
 import 'package:decoder/screens/single_course.dart';
 import 'package:decoder/widgets/user_profile.dart';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 

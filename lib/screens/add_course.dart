@@ -1,14 +1,20 @@
-import 'dart:io';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:decoder/models/lesson.dart';
+import 'package:decoder/models/note.dart';
+import 'package:decoder/screens/add_note.dart';
 import 'package:decoder/widgets/lesson_section.dart';
+import 'package:decoder/widgets/note_section.dart';
 import 'package:decoder/widgets/test_section.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+
+import 'dart:io';
 import 'package:flutter/material.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:image_picker/image_picker.dart';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class AddCourseScreen extends ConsumerStatefulWidget {
   const AddCourseScreen({super.key});
@@ -38,7 +44,7 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
         SnackBar(
           backgroundColor: Theme.of(context).colorScheme.errorContainer,
           content: Text(
-            "Add course image and at least 1 lesson or test.",
+            "Add course image and at least 1 lesson/test/note.",
             style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                 color: Theme.of(context).colorScheme.onErrorContainer),
           ),
@@ -53,7 +59,9 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
     });
     var addedLessons = sectionsList.whereType<LessonSection>().toList();
     var addedTests = sectionsList.whereType<TestSection>().toList();
+    var addedNotes = sectionsList.whereType<NoteSection>().toList();
     List<dynamic> firestoreLessons = [];
+    List<dynamic> firestoreNotes = [];
     List<String> firestoreTests = [];
 
     for (var i in addedLessons) {
@@ -61,6 +69,12 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
       String? videoUrl = YoutubePlayer.convertUrlToId(i.videoID);
       Lesson lesson = Lesson(title: title, url: videoUrl!, learned: []);
       firestoreLessons.add(lesson.toMap());
+    }
+    for (var i in addedNotes) {
+      String title = i.title;
+      String text = i.text;
+      Note note = Note(title: title, text: text);
+      firestoreNotes.add(note.toMap());
     }
     for (var i in addedTests) {
       firestoreTests.add(i.title);
@@ -92,6 +106,13 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
             .doc(courseId)
             .collection('lessons')
             .add(lesson);
+      }
+      for (var note in firestoreNotes) {
+        await firestoreInstance
+            .collection('courses')
+            .doc(courseId)
+            .collection('notes')
+            .add(note);
       }
       setState(() {
         _isUpdating = false;
@@ -175,6 +196,20 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
     );
   }
 
+  void _addNewNote() async {
+    final result = await Navigator.push(
+        context, MaterialPageRoute(builder: (ctx) => const AddNoteScreen()));
+    print(result);
+    if (result != null) {
+      setState(() {
+        sectionsList.add(NoteSection(
+          title: result['title'],
+          text: result['text'],
+        ));
+      });
+    }
+  }
+
   void _pickGalleryImage() async {
     final pickedImage =
         await ImagePicker().pickImage(source: ImageSource.gallery);
@@ -241,16 +276,7 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
                             videoID: linkLessonController.text,
                           ),
                         );
-                        var id = YoutubePlayer.convertUrlToId(
-                            linkLessonController.text);
-                        YoutubePlayerController controller =
-                            YoutubePlayerController(
-                          initialVideoId: id!,
-                          flags: const YoutubePlayerFlags(
-                            autoPlay: true,
-                            mute: false,
-                          ),
-                        );
+
                         showError =
                             false; // Reset error state on successful input
                       });
@@ -346,6 +372,7 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(50),
                         ),
+                        hintText: 'Course name',
                         contentPadding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 8),
                         prefixIcon: Icon(
@@ -400,12 +427,25 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
                   ),
                   onTap: _addNewTest,
                 ),
+                ListTile(
+                  title: Text(
+                    'Add new note',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleLarge!
+                        .copyWith(color: Theme.of(context).colorScheme.primary),
+                  ),
+                  leading: Icon(
+                    Icons.add,
+                    color: Theme.of(context).colorScheme.onBackground,
+                  ),
+                  onTap: _addNewNote,
+                ),
                 const SizedBox(
                   height: 20,
                 ),
                 ListView.builder(
-                    shrinkWrap:
-                        true, // Important to avoid size issues in nested scroll views
+                    shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: sectionsList.length,
                     itemBuilder: (ctx, index) {
@@ -416,39 +456,27 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: BottomAppBar(
-        color: Theme.of(context).cardColor,
+      floatingActionButton: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        width: 60,
         height: 60,
-        child: _isUpdating
-            ? const Center(
-                child: CircularProgressIndicator(),
-              )
-            : Padding(
-                padding: const EdgeInsets.only(right: 10),
-                child: InkWell(
-                  onTap: _publishCourse,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.upload,
-                        color: Theme.of(context).colorScheme.onBackground,
-                        size: 30,
-                      ),
-                      const SizedBox(
-                        width: 10,
-                      ),
-                      Text(
-                        'Publish',
-                        style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                            color: Theme.of(context).colorScheme.onBackground),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+        decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(30),
+            gradient: const LinearGradient(colors: [
+              Color.fromARGB(255, 70, 49, 128),
+              Color.fromARGB(255, 0, 10, 117)
+            ], begin: Alignment.topLeft, end: Alignment.bottomRight)),
+        child: InkWell(
+          onTap: _publishCourse,
+          borderRadius: BorderRadius.circular(30),
+          child: const Icon(
+            Icons.upload,
+            color: Colors.white,
+            size: 27,
+          ),
+        ),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 }

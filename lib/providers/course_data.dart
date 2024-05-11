@@ -1,5 +1,7 @@
 import 'package:decoder/models/course.dart';
 import 'package:decoder/models/lesson.dart';
+import 'package:decoder/models/note.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -12,7 +14,8 @@ class AllCoursesNotifier extends StateNotifier<List<Course>> {
 
     List<Future<Course>> courseFutures = coursesSnapshot.docs.map((doc) async {
       List<Lesson> lessons = await _fetchLessonsForCourse(doc.id);
-      return Course.fromMap(doc.data(), doc.id, lessons);
+      List<Note> notes = await _fetchNotesForCourse(doc.id);
+      return Course.fromMap(doc.data(), doc.id, lessons, notes);
     }).toList();
 
     // Execute all futures in parallel and wait for them to complete
@@ -31,6 +34,18 @@ class AllCoursesNotifier extends StateNotifier<List<Course>> {
 
     return lessonsSnapshot.docs
         .map((doc) => Lesson.fromMap(doc.data(), doc.id))
+        .toList();
+  }
+  Future<List<Note>> _fetchNotesForCourse(String courseId) async {
+    final notesSnapshot = await FirebaseFirestore.instance
+        .collection('courses')
+        .doc(courseId)
+        .collection('notes')
+        .orderBy('createdAt', descending: false)
+        .get();
+
+    return notesSnapshot.docs
+        .map((doc) => Note.fromMap(doc.data(), doc.id))
         .toList();
   }
 }

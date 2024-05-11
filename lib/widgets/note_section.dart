@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 
-class TestSection extends StatelessWidget {
-  const TestSection({super.key, required this.title});
+class NoteSection extends StatelessWidget {
+  const NoteSection({super.key, required this.title, required this.text});
 
   final String title;
+  final String text;
+
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () {},
+      onTap: () {
+        print(text);
+      },
       borderRadius: BorderRadius.circular(15),
       splashColor: Colors.transparent,
       highlightColor: Colors.transparent,
@@ -18,15 +22,14 @@ class TestSection extends StatelessWidget {
         decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(15),
             gradient: LinearGradient(colors: [
-              Theme.of(context).colorScheme.errorContainer.withAlpha(255),
-              Theme.of(context).colorScheme.errorContainer.withOpacity(0.5)
-              
+              Theme.of(context).colorScheme.secondaryContainer,
+              Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.5)
             ], begin: Alignment.topLeft, end: Alignment.bottomRight)),
         child: Align(
           alignment: Alignment.centerLeft,
           child: ListTile(
             leading: Icon(
-              Icons.assignment_add,
+              Icons.note_add,
               color: Theme.of(context).colorScheme.onPrimaryContainer,
             ),
             title: Text(

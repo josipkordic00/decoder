@@ -1,11 +1,13 @@
 import 'package:decoder/screens/auth.dart';
 import 'package:decoder/screens/home.dart';
 import 'package:decoder/screens/splash.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'firebase_options.dart';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 void main() async {

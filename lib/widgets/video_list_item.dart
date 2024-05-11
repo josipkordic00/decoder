@@ -1,11 +1,10 @@
 import 'package:decoder/models/course.dart';
-import 'package:decoder/providers/course_data.dart';
-import 'package:flutter/material.dart';
-import 'package:decoder/screens/single_course.dart';
-import 'package:transparent_image/transparent_image.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:decoder/providers/user_data.dart';
 import 'package:decoder/providers/all_users.dart';
+import 'package:decoder/screens/single_course.dart';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class VideoListItem extends ConsumerStatefulWidget {
   const VideoListItem({super.key, required this.course});
@@ -30,7 +29,6 @@ class _VideoListItemState extends ConsumerState<VideoListItem> {
   Widget build(BuildContext context) {
     final courseImage = ref.watch(courseImageProvider(widget.course.image!));
     final allUsers = ref.watch(allUsersProvider);
-    final allCourses = ref.watch(allCoursesProvider);
 
     final thisUser = allUsers.singleWhere(
       (element) => element['id'] == widget.course.userId,
@@ -90,12 +88,12 @@ class _VideoListItemState extends ConsumerState<VideoListItem> {
                   ),
                   Hero(
                     tag: widget.course.id,
-                    child: FadeInImage(
-                      placeholder: MemoryImage(kTransparentImage),
+                    child: Image(
                       image: courseImage,
                       fit: BoxFit.fitHeight,
                       height: 200,
                       width: double.infinity,
+                      
                     ),
                   ),
                   const SizedBox(
@@ -120,6 +118,11 @@ class _VideoListItemState extends ConsumerState<VideoListItem> {
                       ),
                       Text(
                         'Tests: ${widget.course.tests.length}',
+                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                            color: Theme.of(context).colorScheme.onBackground),
+                      ),
+                      Text(
+                        'Notes: ${widget.course.notes.length}',
                         style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                             color: Theme.of(context).colorScheme.onBackground),
                       ),

@@ -1,12 +1,10 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:decoder/providers/user_data.dart';
 import 'package:decoder/models/user.dart';
-import 'package:decoder/screens/auth.dart';
-import 'package:decoder/screens/home.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:decoder/providers/user_data.dart';
 
 class UserSettingsScreen extends ConsumerStatefulWidget {
   const UserSettingsScreen({super.key, required this.userModel});

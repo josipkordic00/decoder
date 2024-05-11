@@ -1,14 +1,15 @@
-import 'dart:io';
-
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:decoder/providers/user_data.dart';
 import 'package:decoder/screens/home.dart';
 import 'package:decoder/screens/user_settings.dart';
-import 'package:firebase_auth/firebase_auth.dart' as auth;
+
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path/path.dart';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart' as auth;
+
 
 class MainDrawer extends ConsumerStatefulWidget {
   const MainDrawer({super.key});
