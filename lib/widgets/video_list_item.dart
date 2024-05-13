@@ -16,6 +16,7 @@ class VideoListItem extends ConsumerStatefulWidget {
 }
 
 class _VideoListItemState extends ConsumerState<VideoListItem> {
+  
   void switchOnSingleLesson(BuildContext context, Course course) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -27,6 +28,9 @@ class _VideoListItemState extends ConsumerState<VideoListItem> {
 
   @override
   Widget build(BuildContext context) {
+    var courseLessons = 0;
+  var courseNotes = 0;
+  var courseTests = 0;
     final courseImage = ref.watch(courseImageProvider(widget.course.image!));
     final allUsers = ref.watch(allUsersProvider);
 
@@ -36,6 +40,15 @@ class _VideoListItemState extends ConsumerState<VideoListItem> {
           {'first_name': 'User', 'last_name': 'Deleted', 'image': null},
     );
 
+    for (var i in widget.course.content) {
+      if (i.keys.contains('url')) {
+        courseLessons++;
+      } else if (i.keys.contains('text')) {
+        courseNotes++;
+      } else {
+        courseTests++;
+      }
+    }
 
     return Card(
         margin: const EdgeInsets.only(bottom: 30),
@@ -58,8 +71,7 @@ class _VideoListItemState extends ConsumerState<VideoListItem> {
                       thisUser['image_url'] != null
                           ? CircleAvatar(
                               radius: 20,
-                              backgroundImage:
-                                  FileImage(thisUser['image']),
+                              backgroundImage: FileImage(thisUser['image']),
                               backgroundColor: Colors.transparent,
                             )
                           : const CircleAvatar(
@@ -93,7 +105,6 @@ class _VideoListItemState extends ConsumerState<VideoListItem> {
                       fit: BoxFit.fitHeight,
                       height: 200,
                       width: double.infinity,
-                      
                     ),
                   ),
                   const SizedBox(
@@ -112,17 +123,17 @@ class _VideoListItemState extends ConsumerState<VideoListItem> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Lessons: ${widget.course.lessons.length}',
+                        'Lessons: $courseLessons',
                         style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                             color: Theme.of(context).colorScheme.onBackground),
                       ),
                       Text(
-                        'Tests: ${widget.course.tests.length}',
+                        'Tests: $courseTests',
                         style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                             color: Theme.of(context).colorScheme.onBackground),
                       ),
                       Text(
-                        'Notes: ${widget.course.notes.length}',
+                        'Notes: $courseNotes',
                         style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                             color: Theme.of(context).colorScheme.onBackground),
                       ),

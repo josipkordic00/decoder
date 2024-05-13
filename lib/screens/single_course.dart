@@ -1,9 +1,12 @@
+import 'package:decoder/models/note.dart';
 import 'package:decoder/providers/all_users.dart';
 import 'package:decoder/models/course.dart';
 import 'package:decoder/models/lesson.dart';
-import 'package:decoder/screens/lesson_screen.dart';
+import 'package:decoder/screens/course_content_screen.dart';
+import 'package:decoder/widgets/lesson_widget.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:decoder/widgets/note_widget.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:flutter/material.dart';
@@ -47,6 +50,14 @@ class _SingleCourseState extends ConsumerState<SingleCourse> {
       isEnrolled = true;
     }
     super.initState();
+  }
+
+  void _prevLesson(int position) {
+    print('ah');
+  }
+
+  void _nextLesson(int position) {
+    print('ed');
   }
 
   @override
@@ -155,89 +166,120 @@ class _SingleCourseState extends ConsumerState<SingleCourse> {
                 _selectedRowItem
                     ? Expanded(
                         child: ListView.builder(
-                          itemCount: widget.course.lessons.length,
-                          itemBuilder: (context, index) {
-                            bool isTapped = _tappedTiles.contains(index);
-                            var data = widget.course.lessons;
-
-                            return ListTile(
-                                onTap: () {
-                                  Lesson dataLesson = Lesson(
-                                      title: data[index].title,
-                                      url: data[index].url,
-                                      learned: data[index].learned);
-
-                                  Navigator.of(context).push(MaterialPageRoute(
-                                      builder: (ctx) => LessonScreen(
-                                            lesson: dataLesson,
-                                            course: widget.course,
-                                            lessonId: data[index].id,
-                                            index: index,
-                                            lessons: data,
-                                          )));
-                                },
-                                leading: Icon(
-                                  Icons.ondemand_video_rounded,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onPrimaryContainer,
-                                ),
-                                title: Text(
-                                  data[index].title,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyLarge!
-                                      .copyWith(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onBackground),
-                                ),
-                                tileColor: isTapped
-                                    ? Theme.of(context)
-                                        .colorScheme
-                                        .onBackground
-                                        .withOpacity(0.1)
-                                    : null,
-                                trailing: StreamBuilder<DocumentSnapshot>(
-                                    stream: FirebaseFirestore.instance
-                                        .collection('courses')
-                                        .doc(widget.course.id)
-                                        .collection('lessons')
-                                        .doc(data[index]
-                                            .id) // Ensure this document ID is correct
-                                        .snapshots(),
-                                    builder: (ctx,
-                                        AsyncSnapshot<DocumentSnapshot>
-                                            snapshot) {
-                                      if (snapshot.hasData &&
-                                          snapshot.data!.exists) {
-                                        // Access the document data directly
-                                        var lessonData = snapshot.data!.data()
-                                            as Map<String, dynamic>;
-                                        List<dynamic> learnedUsers =
-                                            lessonData['learned'];
-                                        if (learnedUsers.contains(user!.uid)) {
-                                          return const Icon(
-                                              Icons.done_all_sharp,
-                                              color: Color.fromARGB(
-                                                  255, 124, 157, 255));
-                                        } else {
-                                          return Icon(Icons.done_all_sharp,
-                                              color: Theme.of(ctx)
+                            itemCount: widget.course.content.length,
+                            itemBuilder: (context, index) {
+                              bool isTapped = _tappedTiles.contains(index);
+                              var data = widget.course.content;
+                              if (data[index].keys.contains('url')) {
+                                return ListTile(
+                                    onTap: () {
+                                      Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                              builder: (ctx) =>
+                                                  CourseContentScreen(
+                                                    data: data[index],
+                                                    course: widget.course,
+                                                    allData: data,
+                                                  )));
+                                    },
+                                    leading: Icon(
+                                      Icons.ondemand_video_rounded,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimaryContainer,
+                                    ),
+                                    title: Text(
+                                      data[index]['title'],
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyLarge!
+                                          .copyWith(
+                                              color: Theme.of(context)
                                                   .colorScheme
-                                                  .onBackground);
-                                        }
-                                      } else if (snapshot.hasError) {
-                                        return Text('Error: ${snapshot.error}');
-                                      } else if (!snapshot.hasData) {
-                                        return const Text('No data');
-                                      } else {
-                                        // Default fallback for waiting state
-                                        return const CircularProgressIndicator();
-                                      }
-                                    }));
-                          },
-                        ),
+                                                  .onBackground),
+                                    ),
+                                    tileColor: isTapped
+                                        ? Theme.of(context)
+                                            .colorScheme
+                                            .onBackground
+                                            .withOpacity(0.1)
+                                        : null,
+                                    trailing: StreamBuilder<DocumentSnapshot>(
+                                        stream: FirebaseFirestore.instance
+                                            .collection('courses')
+                                            .doc(widget.course.id)
+                                            .collection('content')
+                                            .doc(data[index][
+                                                'id']) // Ensure this document ID is correct
+                                            .snapshots(),
+                                        builder: (ctx,
+                                            AsyncSnapshot<DocumentSnapshot>
+                                                snapshot) {
+                                          if (snapshot.hasData &&
+                                              snapshot.data!.exists) {
+                                            // Access the document data directly
+                                            var lessonData = snapshot.data!
+                                                .data() as Map<String, dynamic>;
+                                            List<dynamic> learnedUsers =
+                                                lessonData['learned'];
+                                            if (learnedUsers
+                                                .contains(user!.uid)) {
+                                              return const Icon(
+                                                  Icons.done_all_sharp,
+                                                  color: Color.fromARGB(
+                                                      255, 124, 157, 255));
+                                            } else {
+                                              return Icon(Icons.done_all_sharp,
+                                                  color: Theme.of(ctx)
+                                                      .colorScheme
+                                                      .onBackground);
+                                            }
+                                          } else if (snapshot.hasError) {
+                                            return Text(
+                                                'Error: ${snapshot.error}');
+                                          } else if (!snapshot.hasData) {
+                                            return const Text('No data');
+                                          } else {
+                                            return const CircularProgressIndicator();
+                                          }
+                                        }));
+                              } else if (data[index].keys.contains('text')) {
+                                return ListTile(
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                            builder: (ctx) =>
+                                                CourseContentScreen(
+                                                  data: data[index],
+                                                  course: widget.course,
+                                                  allData: data,
+                                                )));
+                                  },
+                                  leading: Icon(
+                                    Icons.book,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimaryContainer,
+                                  ),
+                                  title: Text(
+                                    data[index]['title'],
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyLarge!
+                                        .copyWith(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onBackground),
+                                  ),
+                                  tileColor: isTapped
+                                      ? Theme.of(context)
+                                          .colorScheme
+                                          .onBackground
+                                          .withOpacity(0.1)
+                                      : null,
+                                );
+                              }
+                            }),
                       )
                     : Text(
                         'About course...',

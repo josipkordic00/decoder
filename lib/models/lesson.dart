@@ -8,6 +8,7 @@ class Lesson {
     required this.title,
     required this.url,
     required this.learned,
+    required this.position,
     String? id,
   }) : id = id ?? uuid.v4();
 
@@ -15,6 +16,7 @@ class Lesson {
   final String url;
   final String id;
   final List<dynamic> learned;
+  final int position;
 
   Map<String, dynamic> toMap() {
     return {
@@ -22,7 +24,8 @@ class Lesson {
       'title': title,
       'url': url,
       'learned': learned,
-      'createdAt': Timestamp.now()
+      'createdAt': Timestamp.now(),
+      'position': position
     };
   }
 
@@ -32,6 +35,7 @@ class Lesson {
       title: map['title'] as String,
       url: map['url'] as String,
       learned: map['learned'] as List<dynamic>,
+      position: map['position'] as int,
     );
   }
 }

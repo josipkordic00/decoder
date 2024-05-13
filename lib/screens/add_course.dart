@@ -57,28 +57,45 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
     setState(() {
       _isUpdating = true;
     });
-    var addedLessons = sectionsList.whereType<LessonSection>().toList();
-    var addedTests = sectionsList.whereType<TestSection>().toList();
-    var addedNotes = sectionsList.whereType<NoteSection>().toList();
+
+    var addedLessons = [];
+    var addedTests = [];
+    var addedNotes = [];
     List<dynamic> firestoreLessons = [];
     List<dynamic> firestoreNotes = [];
     List<String> firestoreTests = [];
+    for (var l in sectionsList) {
+      if (l.runtimeType == LessonSection) {
+        addedLessons.add([sectionsList.indexOf(l), l]);
+      }
+      if (l.runtimeType == TestSection) {
+        addedTests.add([sectionsList.indexOf(l), l]);
+      }
+      if (l.runtimeType == NoteSection) {
+        addedNotes.add([sectionsList.indexOf(l), l]);
+      }
+    }
 
+    print(addedNotes);
     for (var i in addedLessons) {
-      String title = i.title;
-      String? videoUrl = YoutubePlayer.convertUrlToId(i.videoID);
-      Lesson lesson = Lesson(title: title, url: videoUrl!, learned: []);
+      String title = i[1].title;
+      String? videoUrl = YoutubePlayer.convertUrlToId(i[1].videoID);
+      int position = i[0];
+      Lesson lesson =
+          Lesson(title: title, url: videoUrl!, learned: [], position: position);
       firestoreLessons.add(lesson.toMap());
     }
+
     for (var i in addedNotes) {
-      String title = i.title;
-      String text = i.text;
-      Note note = Note(title: title, text: text);
+      String title = i[1].title;
+      String text = i[1].text;
+      int position = i[0];
+      print('̆$title, $text, $position');
+      Note note = Note(title: title, text: text, position: position);
+
       firestoreNotes.add(note.toMap());
     }
-    for (var i in addedTests) {
-      firestoreTests.add(i.title);
-    }
+    print('try');
     try {
       final storageRef = FirebaseStorage.instance
           .ref()
@@ -96,7 +113,6 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
         'name': _enteredName,
         'image_url': imageURL,
         'user_id': userId,
-        'tests': firestoreTests,
         'createdAt': Timestamp.now(),
         'enrolled_users': [userId]
       }, SetOptions(merge: true));
@@ -104,16 +120,19 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
         await firestoreInstance
             .collection('courses')
             .doc(courseId)
-            .collection('lessons')
-            .add(lesson);
+            .collection('content')
+            .doc(lesson['id'])
+            .set(lesson);
       }
       for (var note in firestoreNotes) {
         await firestoreInstance
             .collection('courses')
             .doc(courseId)
-            .collection('notes')
-            .add(note);
+            .collection('content')
+            .doc(note['id'])
+            .set(note);
       }
+      print('added');
       setState(() {
         _isUpdating = false;
       });
@@ -199,7 +218,6 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
   void _addNewNote() async {
     final result = await Navigator.push(
         context, MaterialPageRoute(builder: (ctx) => const AddNoteScreen()));
-    print(result);
     if (result != null) {
       setState(() {
         sectionsList.add(NoteSection(
@@ -467,14 +485,14 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
               Color.fromARGB(255, 0, 10, 117)
             ], begin: Alignment.topLeft, end: Alignment.bottomRight)),
         child: InkWell(
-          onTap: _publishCourse,
-          borderRadius: BorderRadius.circular(30),
-          child: const Icon(
-            Icons.upload,
-            color: Colors.white,
-            size: 27,
-          ),
-        ),
+                onTap: _publishCourse,
+                borderRadius: BorderRadius.circular(30),
+                child: const Icon(
+                  Icons.upload,
+                  color: Colors.white,
+                  size: 27,
+                ),
+              ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );

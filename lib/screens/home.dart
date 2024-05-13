@@ -1,4 +1,3 @@
-
 import 'package:decoder/models/course.dart';
 import 'package:decoder/screens/add_course.dart';
 import 'package:decoder/screens/owned_courses.dart';
@@ -36,7 +35,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
     final userId = FirebaseAuth.instance.currentUser!.uid;
     ref.read(userDataProvider.notifier).getFromFirestore(userId);
- 
+
     ref.read(allUsersProvider.notifier).getAllUsersFromFirestore();
     ref.read(allCoursesProvider.notifier).getAllCoursesFromFirestore();
     super.initState();
@@ -68,18 +67,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               .snapshots(),
           builder: (context, snapshot) {
             ref.read(allCoursesProvider.notifier).getAllCoursesFromFirestore();
+              
             return ListView.builder(
               itemCount: providerCourses.length,
               itemBuilder: (context, index) {
                 var course = Course(
                     title: providerCourses[index].title,
-                    lessons: providerCourses[index].lessons,
-                    notes: providerCourses[index].notes,
+                    content: providerCourses[index].content,
                     id: providerCourses[index].id,
                     enrolledUsers: providerCourses[index].enrolledUsers,
                     image: providerCourses[index].image,
                     userId: providerCourses[index].userId,
-                    tests: providerCourses[index].tests,
                     createdAt: providerCourses[index].createdAt);
                 return VideoListItem(course: course);
               },
