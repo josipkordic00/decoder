@@ -54,76 +54,79 @@ class _LessonWidgetState extends State<LessonWidget> {
 
   @override
   Widget build(BuildContext context) {
-    Widget content = Column(
-      children: [
-        YoutubePlayer(
-          controller: _controller,
-          showVideoProgressIndicator: true,
-          onEnded: (metaData) {
-            _updateLearned();
-            Navigator.of(context).pop();
-          },
-        ),
-        const SizedBox(
-          height: 20,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  widget.lesson.title,
-                  style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                      color: Theme.of(context).colorScheme.onBackground,
-                      fontWeight: FontWeight.bold),
+    Widget content = Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        children: [
+          YoutubePlayer(
+            controller: _controller,
+            showVideoProgressIndicator: true,
+            onEnded: (metaData) {
+              _updateLearned();
+              Navigator.of(context).pop();
+            },
+          ),
+          const SizedBox(
+            height: 20,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    widget.lesson.title,
+                    style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                        color: Theme.of(context).colorScheme.onBackground,
+                        fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              Text(
-                'Viewers: ',
-                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                    color: Theme.of(context).colorScheme.onBackground),
-              ),
-              StreamBuilder(
-                  stream: FirebaseFirestore.instance
-                      .collection('courses')
-                      .doc(widget.course.id)
-                      .collection('content')
-                      .doc(widget.lessonId)
-                      .snapshots(),
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData || snapshot.hasError) {
-                      return Text(
-                        'Error',
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                            color: Theme.of(context).colorScheme.onBackground),
-                      );
-                    }
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Text(
-                        'Loading ...',
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                            color: Theme.of(context).colorScheme.onBackground),
-                      );
-                    }
-                    return Text(
-                      '${snapshot.data!.data()!['learned'].length}',
-                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          color: Theme.of(context).colorScheme.onBackground),
-                    );
-                  }),
             ],
           ),
-        ),
-      ],
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Text(
+                  'Viewers: ',
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      color: Theme.of(context).colorScheme.onBackground),
+                ),
+                StreamBuilder(
+                    stream: FirebaseFirestore.instance
+                        .collection('courses')
+                        .doc(widget.course.id)
+                        .collection('content')
+                        .doc(widget.lessonId)
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData || snapshot.hasError) {
+                        return Text(
+                          'Error',
+                          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                              color: Theme.of(context).colorScheme.onBackground),
+                        );
+                      }
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Text(
+                          'Loading ...',
+                          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                              color: Theme.of(context).colorScheme.onBackground),
+                        );
+                      }
+                      return Text(
+                        '${snapshot.data!.data()!['learned'].length}',
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                            color: Theme.of(context).colorScheme.onBackground),
+                      );
+                    }),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
     return content;
   }

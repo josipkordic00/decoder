@@ -16,7 +16,7 @@ class NoteSection extends StatelessWidget {
       splashColor: Colors.transparent,
       highlightColor: Colors.transparent,
       child: Container(
-        height: 80,
+        padding: const EdgeInsets.all(10),
         margin: const EdgeInsets.only(bottom: 10),
         width: double.infinity,
         decoration: BoxDecoration(

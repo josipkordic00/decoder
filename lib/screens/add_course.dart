@@ -1,6 +1,7 @@
 import 'package:decoder/models/lesson.dart';
 import 'package:decoder/models/note.dart';
 import 'package:decoder/screens/add_note.dart';
+import 'package:decoder/screens/add_test_screen.dart';
 import 'package:decoder/widgets/lesson_section.dart';
 import 'package:decoder/widgets/note_section.dart';
 import 'package:decoder/widgets/test_section.dart';
@@ -76,7 +77,6 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
       }
     }
 
-    print(addedNotes);
     for (var i in addedLessons) {
       String title = i[1].title;
       String? videoUrl = YoutubePlayer.convertUrlToId(i[1].videoID);
@@ -90,12 +90,10 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
       String title = i[1].title;
       String text = i[1].text;
       int position = i[0];
-      print('̆$title, $text, $position');
       Note note = Note(title: title, text: text, position: position);
 
       firestoreNotes.add(note.toMap());
     }
-    print('try');
     try {
       final storageRef = FirebaseStorage.instance
           .ref()
@@ -163,56 +161,17 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
     }
   }
 
-  void _addNewTest() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          elevation: 16,
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min, // Use minimum space
-              children: <Widget>[
-                TextFormField(
-                  controller: titleTestController,
-                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                      color: Theme.of(context).colorScheme.onBackground),
-                  decoration: InputDecoration(
-                    errorText: showError ? 'Please enter a title' : null,
-                    hintText: 'Enter test title',
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20)),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                TextButton(
-                  onPressed: () {
-                    if (titleTestController.text.isEmpty) {
-                      // If text is empty, update the state to show error
-                      setState(() {
-                        showError = true; // Enable error message display
-                      });
-                    } else {
-                      setState(() {
-                        sectionsList
-                            .add(TestSection(title: titleTestController.text));
-                        showError = false;
-                      });
-                      titleTestController.clear();
-                      Navigator.of(context).pop();
-                    }
-                  },
-                  child: const Text('Save'),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
+  void _addNewTest() async {
+    final result = await Navigator.push(
+        context, MaterialPageRoute(builder: (ctx) => const AddTestScreen()));
+    if (result != null) {
+      setState(() {
+        sectionsList.add(TestSection(
+          title: result['title'],
+          id: result['id'],
+        ));
+      });
+    }
   }
 
   void _addNewNote() async {

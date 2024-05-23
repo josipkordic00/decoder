@@ -22,8 +22,10 @@ class NoteWidget extends StatelessWidget {
                     color: Theme.of(context).colorScheme.primary,
                     fontSize: 24, // Adjusted font size for better readability
                     fontWeight: FontWeight.bold,
+                    
                   ),
             ),
+          
             const SizedBox(
               height: 10,
             ),

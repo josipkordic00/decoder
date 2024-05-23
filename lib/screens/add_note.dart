@@ -44,6 +44,7 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
                     mainAxisSize: MainAxisSize.min, // Use minimum space
                     children: <Widget>[
                       TextFormField(
+                        maxLength: 50,
                         style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                             color: Theme.of(context).colorScheme.onBackground),
                         decoration: InputDecoration(
@@ -64,25 +65,27 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
                     ],
                   ),
                 ),
-                TextFormField(
-                  keyboardType: TextInputType.multiline,
-                  maxLines: null,
-                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                      color: Theme.of(context).colorScheme.onBackground),
-                  decoration: const InputDecoration(
-                    labelText: 'Note body',
-                    border: OutlineInputBorder(),
-                    hintText: 'Type your note here...',
+                Expanded(
+                  child: TextFormField(
+                    keyboardType: TextInputType.multiline,
+                    maxLines: null,
+                    style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                        color: Theme.of(context).colorScheme.onBackground),
+                    decoration: const InputDecoration(
+                      labelText: 'Note body',
+                      border: OutlineInputBorder(),
+                      hintText: 'Type your note here...',
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter some text';
+                      }
+                      return null;
+                    },
+                    onSaved: (newValue) {
+                      text = newValue!;
+                    },
                   ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter some text';
-                    }
-                    return null;
-                  },
-                  onSaved: (newValue) {
-                    text = newValue!;
-                  },
                 ),
                 const SizedBox(
                   height: 20,

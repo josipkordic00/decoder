@@ -1,12 +1,8 @@
-import 'package:decoder/models/note.dart';
 import 'package:decoder/providers/all_users.dart';
 import 'package:decoder/models/course.dart';
-import 'package:decoder/models/lesson.dart';
 import 'package:decoder/screens/course_content_screen.dart';
-import 'package:decoder/widgets/lesson_widget.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:decoder/widgets/note_widget.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:flutter/material.dart';
@@ -52,22 +48,17 @@ class _SingleCourseState extends ConsumerState<SingleCourse> {
     super.initState();
   }
 
-  void _prevLesson(int position) {
-    print('ah');
-  }
-
-  void _nextLesson(int position) {
-    print('ed');
-  }
+  
 
   @override
   Widget build(BuildContext context) {
     final allUsers = ref.watch(allUsersProvider);
     final courseOwner = allUsers.singleWhere(
-      (e) => e['id'] == widget.course.id,
+      (e) => e['id'] == widget.course.userId,
       orElse: () =>
           {'first_name': 'User', 'last_name': 'Deleted', 'image_url': null},
     );
+
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -256,7 +247,7 @@ class _SingleCourseState extends ConsumerState<SingleCourse> {
                                                 )));
                                   },
                                   leading: Icon(
-                                    Icons.book,
+                                    Icons.note_alt,
                                     color: Theme.of(context)
                                         .colorScheme
                                         .onPrimaryContainer,
@@ -265,11 +256,12 @@ class _SingleCourseState extends ConsumerState<SingleCourse> {
                                     data[index]['title'],
                                     style: Theme.of(context)
                                         .textTheme
-                                        .bodyLarge!
+                                        .titleMedium!
                                         .copyWith(
                                             color: Theme.of(context)
                                                 .colorScheme
-                                                .onBackground),
+                                                .onBackground,
+                                                fontSize: 20),
                                   ),
                                   tileColor: isTapped
                                       ? Theme.of(context)

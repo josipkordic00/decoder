@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-class TestSection extends StatelessWidget {
-  const TestSection({super.key, required this.title, required this.id});
+class QuestionSection extends StatelessWidget {
+  const QuestionSection({super.key, required this.map});
 
-  final String title;
-  final String id;
+  final Map<String, dynamic> map;
+
   @override
   Widget build(BuildContext context) {
     return InkWell(
@@ -19,8 +19,8 @@ class TestSection extends StatelessWidget {
         decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(15),
             gradient: LinearGradient(colors: [
-              Theme.of(context).colorScheme.errorContainer.withAlpha(255),
-              Theme.of(context).colorScheme.errorContainer.withOpacity(0.5)
+              Theme.of(context).colorScheme.primaryContainer.withAlpha(255),
+              Theme.of(context).colorScheme.primaryContainer.withOpacity(0.5)
             ], begin: Alignment.topLeft, end: Alignment.bottomRight)),
         child: Align(
           alignment: Alignment.centerLeft,
@@ -30,9 +30,14 @@ class TestSection extends StatelessWidget {
               color: Theme.of(context).colorScheme.onPrimaryContainer,
             ),
             title: Text(
-              title,
+              map['question'],
               style: Theme.of(context).textTheme.titleLarge!.copyWith(
                   color: Theme.of(context).colorScheme.onPrimaryContainer),
+            ),
+            subtitle: Text(map['type']),
+            trailing: IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () {},
             ),
           ),
         ),
