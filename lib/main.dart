@@ -1,4 +1,3 @@
-import 'package:decoder/screens/add_test_screen.dart';
 import 'package:decoder/screens/auth.dart';
 import 'package:decoder/screens/home.dart';
 import 'package:decoder/screens/splash.dart';
@@ -81,7 +80,7 @@ class App extends StatelessWidget {
               return const SplashScreen();
             }
             if (snapshot.hasData) {
-              return const AddTestScreen();
+              return const HomeScreen();
             }
             return const AuthScreen();
           }),

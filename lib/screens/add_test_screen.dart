@@ -12,6 +12,7 @@ class AddTestScreen extends StatefulWidget {
 
 class _AddTestScreenState extends State<AddTestScreen> {
   final questions = [];
+  final TextEditingController titleTestController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +31,7 @@ class _AddTestScreenState extends State<AddTestScreen> {
                 }
                 return null;
               },
+              controller: titleTestController,
               style: Theme.of(context)
                   .textTheme
                   .bodyLarge!
@@ -53,6 +55,9 @@ class _AddTestScreenState extends State<AddTestScreen> {
                 final result = await Navigator.of(context).push(
                     MaterialPageRoute(
                         builder: (ctx) => const AddQuestionScreen()));
+                if (result == null) {
+                  return;
+                }
                 setState(() {
                   questions.add(result);
                 });
@@ -62,9 +67,19 @@ class _AddTestScreenState extends State<AddTestScreen> {
             Expanded(
               child: ListView.builder(
                 itemCount: questions.length,
-                itemBuilder: (BuildContext context, int index) {
-                  return QuestionSection(map: questions[index]);
-                },
+                itemBuilder: (cts, index) => Dismissible(
+                  background: Container(
+                    color:
+                        Theme.of(context).colorScheme.error.withOpacity(0.75),
+                  ),
+                  key: ValueKey(questions[index]),
+                  onDismissed: (direction) {
+                    setState(() {
+                      questions.remove(questions[index]);
+                    });
+                  },
+                  child: QuestionSection(map: questions[index]),
+                ),
               ),
             ),
             const SizedBox(
@@ -72,7 +87,7 @@ class _AddTestScreenState extends State<AddTestScreen> {
             ),
             ElevatedButton(
                 onPressed: () {
-                  print(questions);
+                  Navigator.of(context).pop({titleTestController.text:questions});
                 },
                 child: const Text('Submit test')),
             Text(

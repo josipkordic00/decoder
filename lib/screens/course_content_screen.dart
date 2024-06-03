@@ -1,9 +1,12 @@
 import 'package:decoder/models/course.dart';
 import 'package:decoder/models/lesson.dart';
 import 'package:decoder/models/note.dart';
+import 'package:decoder/models/test.dart';
 import 'package:decoder/widgets/lesson_widget.dart';
 import 'package:decoder/widgets/note_widget.dart';
+import 'package:decoder/widgets/test_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 class CourseContentScreen extends StatefulWidget {
   const CourseContentScreen(
@@ -76,6 +79,13 @@ class _CourseContentScreenState extends State<CourseContentScreen> {
               text: widget.data['text'],
               position: widget.data['position']),
           course: widget.course);
+    } else {
+      content = TestWidget(
+          test: Test(
+              title: widget.data['title'],
+              position: widget.data['position'],
+              tasks: widget.data['tasks']),
+          course: widget.course);
     }
     return Scaffold(
       appBar: AppBar(
@@ -91,7 +101,7 @@ class _CourseContentScreenState extends State<CourseContentScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          content,
+          Expanded(child: content),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [

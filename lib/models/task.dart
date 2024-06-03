@@ -1,5 +1,5 @@
-class Task {
-  const Task({
+class TaskModel {
+  const TaskModel({
     required this.question,
     required this.answers,
     required this.type,
@@ -20,12 +20,12 @@ class Task {
     };
   }
 
-  factory Task.fromMap(Map<String, dynamic> map) {
-    return Task(
+  factory TaskModel.fromMap(Map<dynamic, dynamic> map) {
+    return TaskModel(
       question: map['question'] as String,
       answers: map['answers'] as List<String>,
       type: map['type'] as String,
-      correctAnswer: map['correct_answer'] as String
+      correctAnswer: map['correct_Answer'] as String
     );
   }
 }

@@ -1,5 +1,7 @@
 import 'package:decoder/models/lesson.dart';
 import 'package:decoder/models/note.dart';
+import 'package:decoder/models/task.dart';
+import 'package:decoder/models/test.dart';
 import 'package:decoder/screens/add_note.dart';
 import 'package:decoder/screens/add_test_screen.dart';
 import 'package:decoder/widgets/lesson_section.dart';
@@ -64,7 +66,7 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
     var addedNotes = [];
     List<dynamic> firestoreLessons = [];
     List<dynamic> firestoreNotes = [];
-    List<String> firestoreTests = [];
+    List<dynamic> firestoreTests = [];
     for (var l in sectionsList) {
       if (l.runtimeType == LessonSection) {
         addedLessons.add([sectionsList.indexOf(l), l]);
@@ -94,6 +96,19 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
 
       firestoreNotes.add(note.toMap());
     }
+
+    for (var i in addedTests) {
+      String title = i[1].title;
+
+      List<dynamic> tasks = [];
+      for (var j in i[1].data) {
+        tasks.add(j);
+      }
+      int position = i[0];
+      Test test = Test(title: title, position: position, tasks: tasks);
+      firestoreTests.add(test.toMap());
+    }
+
     try {
       final storageRef = FirebaseStorage.instance
           .ref()
@@ -114,6 +129,7 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
         'createdAt': Timestamp.now(),
         'enrolled_users': [userId]
       }, SetOptions(merge: true));
+
       for (var lesson in firestoreLessons) {
         await firestoreInstance
             .collection('courses')
@@ -129,6 +145,15 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
             .collection('content')
             .doc(note['id'])
             .set(note);
+      }
+      for (var test in firestoreTests) {
+        print(test);
+        await firestoreInstance
+            .collection('courses')
+            .doc(courseId)
+            .collection('content')
+            .doc(test['id'])
+            .set(test);
       }
       print('added');
       setState(() {
@@ -165,10 +190,11 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
     final result = await Navigator.push(
         context, MaterialPageRoute(builder: (ctx) => const AddTestScreen()));
     if (result != null) {
+      print(result.values.first);
       setState(() {
         sectionsList.add(TestSection(
-          title: result['title'],
-          id: result['id'],
+          title: result.keys.first,
+          data: result.values.first,
         ));
       });
     }
@@ -444,14 +470,14 @@ class _AddCourseScreenState extends ConsumerState<AddCourseScreen> {
               Color.fromARGB(255, 0, 10, 117)
             ], begin: Alignment.topLeft, end: Alignment.bottomRight)),
         child: InkWell(
-                onTap: _publishCourse,
-                borderRadius: BorderRadius.circular(30),
-                child: const Icon(
-                  Icons.upload,
-                  color: Colors.white,
-                  size: 27,
-                ),
-              ),
+          onTap: _publishCourse,
+          borderRadius: BorderRadius.circular(30),
+          child: const Icon(
+            Icons.upload,
+            color: Colors.white,
+            size: 27,
+          ),
+        ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );

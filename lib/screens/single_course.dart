@@ -270,6 +270,42 @@ class _SingleCourseState extends ConsumerState<SingleCourse> {
                                           .withOpacity(0.1)
                                       : null,
                                 );
+                              }else{
+                                return ListTile(
+                                  onTap: () {
+                                         Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                            builder: (ctx) =>
+                                                CourseContentScreen(
+                                                  data: data[index],
+                                                  course: widget.course,
+                                                  allData: data,
+                                                )));
+                                  },
+                                  leading: Icon(
+                                    Icons.quiz,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimaryContainer,
+                                  ),
+                                  title: Text(
+                                    data[index]['title'],
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium!
+                                        .copyWith(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onBackground,
+                                                fontSize: 20),
+                                  ),
+                                  tileColor: isTapped
+                                      ? Theme.of(context)
+                                          .colorScheme
+                                          .onBackground
+                                          .withOpacity(0.1)
+                                      : null,
+                                );
                               }
                             }),
                       )

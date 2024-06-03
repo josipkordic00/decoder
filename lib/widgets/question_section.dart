@@ -13,7 +13,7 @@ class QuestionSection extends StatelessWidget {
       splashColor: Colors.transparent,
       highlightColor: Colors.transparent,
       child: Container(
-        height: 80,
+        constraints: BoxConstraints(minHeight: 80),
         margin: const EdgeInsets.only(bottom: 10),
         width: double.infinity,
         decoration: BoxDecoration(
@@ -37,7 +37,9 @@ class QuestionSection extends StatelessWidget {
             subtitle: Text(map['type']),
             trailing: IconButton(
               icon: const Icon(Icons.edit),
-              onPressed: () {},
+              onPressed: () {
+
+              },
             ),
           ),
         ),

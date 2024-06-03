@@ -1,16 +1,22 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:decoder/models/task.dart';
+
+
+import 'package:uuid/uuid.dart';
+
+const uuid = Uuid();
 
 class Test {
-  const Test(
-      {required this.title,
-      required this.id,
-      required this.position,
-      required this.tasks});
+  Test({
+    required this.title,
+    required this.position,
+    required this.tasks,
+    String? id,
+  }) : id = id ?? uuid.v4();
+
   final String title;
-  final String id;
-  final List<Task> tasks;
+  final List<dynamic> tasks;
   final int position;
+  final String id;
 
   Map<String, dynamic> toMap() {
     return {
@@ -26,7 +32,7 @@ class Test {
     return Test(
       id: documentId,
       title: map['title'] as String,
-      tasks: map['tasks'] as List<Task>,
+      tasks: map['tasks'] as List<dynamic>,
       position: map['position'] as int,
     );
   }

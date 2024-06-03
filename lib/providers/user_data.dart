@@ -82,7 +82,6 @@ class UserDataNotifier extends StateNotifier<UserModel?> {
     final file = File(filePath);
 
     if (await file.exists()) {
-      print("File already exists: $filePath");
       return file;
     }
 

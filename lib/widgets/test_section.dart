@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 class TestSection extends StatelessWidget {
-  const TestSection({super.key, required this.title, required this.id});
+  const TestSection({super.key, required this.title, required this.data});
 
   final String title;
-  final String id;
+  final dynamic data;
   @override
   Widget build(BuildContext context) {
     return InkWell(
