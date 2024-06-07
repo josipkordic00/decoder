@@ -116,7 +116,7 @@ class _TestWidgetState extends State<TestWidget> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            Text('Question: $question'),
+            Text('Question: $question', style: Theme.of(context).textTheme.titleMedium!.copyWith(color: Theme.of(context).colorScheme.onBackground),),
             content,
             ElevatedButton(
                 onPressed: () {

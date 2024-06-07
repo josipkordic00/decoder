@@ -10,7 +10,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 
-
 class MainDrawer extends ConsumerStatefulWidget {
   const MainDrawer({super.key});
 
@@ -22,15 +21,12 @@ class _MainDrawerState extends ConsumerState<MainDrawer> {
   final user = auth.FirebaseAuth.instance.currentUser!;
   void _deleteUser() async {
     try {
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .delete();
-
-      await user.delete();
-
-      // Sign out
-      await auth.FirebaseAuth.instance.signOut();
+      List<Future<void>> futures = [
+        FirebaseFirestore.instance.collection('users').doc(user.uid).delete(),
+        user.delete(),
+        auth.FirebaseAuth.instance.signOut()
+      ];
+      await Future.wait(futures);
     } catch (error) {
       print("An error occurred during account deletion: $error");
     }
